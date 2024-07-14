@@ -1536,9 +1536,10 @@ static inline void __sse_f16x4_store(ggml_fp16_t *x, __m128 y) {
 #define GGML_F32x8_MUL     __lasx_xvfmul_s
 // GGML_F32x8_REDUCE 是一个宏定义，用于实现向量的归约(reduction)操作。
 //在计算机科学中，归约是一种将数组或向量中的所有元素通过某种运算（如加法、乘法）合并成一个单一结果值的过程。
-//在这个上下文中，它用于将一个 GGML_F32x8 类型的向量（即包含8个单精度浮点数的向量）中的所有元素相加，得到一个标量浮点数结果。
+//在__loongarch_lasx中，它用于将4个包含8个单精度浮点数的向量相加，然后把得到的256位向量中的所有元素相加，得到一个标量浮点数结果。
 #define GGML_F32x8_REDUCE(res, x)                                 \
 do {                                                              \
+//GGML_F32_ARR=32/8=4
     int offset = GGML_F32_ARR >> 1;                               \
     for (int i = 0; i < offset; ++i) {                            \
         x[i] = __lasx_xvfadd_s(x[i], x[offset+i]);                  \
@@ -1906,6 +1907,7 @@ static void ggml_vec_dot_bf16(int n, float * restrict s, size_t bs, ggml_bf16_t 
     *s = sumf;
 }
 
+//如果不使用llamafile的话，对于src0是fp16、src1是fp32的情况，会把src1转为fp16，然后使用该函数计算vec_dot
 static void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t * restrict x, size_t bx, ggml_fp16_t * restrict y, size_t by, int nrc) {
     assert(nrc == 1);
     UNUSED(nrc);
@@ -1916,19 +1918,23 @@ static void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t *
     ggml_float sumf = 0.0;
 
 #if defined(GGML_SIMD)
-    
+    //GGML_F16_STEP=32, 31=0b11111，相当于np末5位置0
     const int np = (n & ~(GGML_F16_STEP - 1));
-
+    //GGML_F16_VEC_ZERO设置一个全0的256位向量
+    //GGML_F16_VEC是__m256
+    //GGML_F16_ARR = GGML_F32_STEP/GGML_F32_EPR = 32/8 = 4
     GGML_F16_VEC sum[GGML_F16_ARR] = { GGML_F16_VEC_ZERO };
 
     GGML_F16_VEC ax[GGML_F16_ARR];
     GGML_F16_VEC ay[GGML_F16_ARR];
 
+    //GGML_F16_STEP=32, GGML_F16_ARR=4，这个32是为了和量化中通常使用的32保持一致？
     for (int i = 0; i < np; i += GGML_F16_STEP) {
         for (int j = 0; j < GGML_F16_ARR; j++) {
+            //GGML_F16_VEC_LOAD从地址x中加载8个半精度浮点数，并将它们转换为单精度浮点数(fp32),放到256位向量里
             ax[j] = GGML_F16_VEC_LOAD(x + i + j*GGML_F16_EPR, j);
             ay[j] = GGML_F16_VEC_LOAD(y + i + j*GGML_F16_EPR, j);
-
+            //sum[i]=ax[i]*ay[i]+sum[i], i在0~8之间
             sum[j] = GGML_F16_VEC_FMA(sum[j], ax[j], ay[j]);
         }
     }

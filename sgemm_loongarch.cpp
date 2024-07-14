@@ -367,10 +367,15 @@ static inline __m256i lasx_set_q(__m128i inhi, __m128i inlo) {
     );
     return out;
 }
+//和ggml.c里的__lasx_f32cx8_load功能一样？但是不用再访存了
 template <> inline __m256 load(const ggml_fp16_t *p) {
+    //load出来8个16位浮点
     __m128i vector16 = __lsx_vld((const __m128i *)p, 0);
+    //高位的4个16位浮点转为32位浮点
     __m128i hi = (__m128i)__lsx_vfcvth_s_h(vector16);
+    //低位的4个16位浮点转为32位浮点
     __m128i lo = (__m128i)__lsx_vfcvtl_s_h(vector16);
+    //合并成包含8个32位浮点的256位向量
     return (__m256)lasx_set_q(hi,lo);
 
 }
@@ -915,11 +920,12 @@ class tinyBLAS_Q0_AVX {
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i) {
 #if defined(__AVX2__)
-                    //_mm256_sign_epi8：对于每一对输入向量的元素，如果第二个向量的元素是正数，保持第一个向量的对应元素不变；
+                    //_mm256_sign_epi8(psignb)：对于每一对输入向量的元素，如果第二个向量的元素是正数，保持第一个向量的对应元素不变；
                     //如果第二个向量的元素是负数，将第一个向量的对应元素取相反数；如果第二个向量的元素是零，将第一个向量的对应元素变为零
                     //load函数从内存地址中加载数据，如果数据类型是block_q8_0，则直接加载一个block中量化后的256(8*32)位数据到向量中
                     //如果是block_q4_0，则将128位量化后数据放到256位向量中，且按照[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]调整顺序
                     //undot将两个输入的对应位相乘，相邻4个相加，得到8个32位数
+                    //在gemm<4,2>中，当i在0和RM之间循环的时候，load(B)的操作只用做一次；此外，当不同的j循环到同一个i时,sign(A,A)的结果可以重复利用
                         __m256 udTmp = updot(_mm256_sign_epi8(load(A + lda * (ii + i) + l),
                                                               load(A + lda * (ii + i) + l)),
                                              _mm256_sign_epi8(load(B + ldb * (jj + j) + l),
@@ -943,7 +949,7 @@ class tinyBLAS_Q0_AVX {
 #endif
                         //unhalf调用GGML_FP16_TO_FP32，把A和B的scale转为32位
                         //_mm256_set1_ps将指定的单精度浮点数广播到 256 位的 AVX 寄存器的每个 32 位浮点数位置
-                        //madd实现a[i]*b[i]+c[i]
+                        //madd实现a[i]*b[i]+c[i](vfmadd)
                         Cv[j][i] = madd(_mm256_set1_ps(unhalf(A[lda * (ii + i) + l].d) *
                                                        unhalf(B[ldb * (jj + j) + l].d)),
                                                        udTmp,
@@ -956,7 +962,7 @@ class tinyBLAS_Q0_AVX {
     }
 
     inline __m256i load(const block_q8_0 *b) {
-        //_mm256_loadu_si256从内存加载256位数据到向量寄存器
+        //_mm256_loadu_si256从内存加载256位数据到向量寄存器(vmovdqu)
         return _mm256_loadu_si256((const __m256i *)b->qs);
     }
 
@@ -988,6 +994,7 @@ class tinyBLAS_Q0_AVX {
     inline __m256 updot(__m256i u, __m256i s) {
         __m256i res;
 #if defined(__AVXVNNI__) || (defined(__AVX512VNNI__) && defined(__AVX512VL__))
+        //一条指令实现u和s对应位置8位整数相乘，得到的相邻4个结果相加
         res = _mm256_dpbusd_epi32(_mm256_setzero_si256(), u, s);
 #else
         //_mm256_set1_epi16(1)把16位整数1广播到256位寄存器的每个16位
@@ -1001,13 +1008,13 @@ class tinyBLAS_Q0_AVX {
     }
 
     static inline __m256i denibble(const uint8_t *p) {
-        //_mm_loadu_si128从指定的内存位置加载128位数据到x中
+        //_mm_loadu_si128从指定的内存位置加载128位数据到x中(movdqu)
         __m128i x = _mm_loadu_si128((const __m128i *)p);
         //_mm256_set1_epi8(15)将256位向量中32个8位整数都设为15, 15=0b00001111
         //_mm256_castsi128_si256(x)将x设为一个256位向量的低128位
         //_mm_srli_epi16(x, 4)将128位向量中每个16位元素右移4位
         //_mm256_insertf128_si256将_mm_srli_epi16(x, 4)插入_mm256_castsi128_si256(x)生成的256位向量高位
-        //_mm256_and_si256对两个256位向量执行按位与
+        //_mm256_and_si256对两个256位向量执行按位与(vpand)
         //最后得到的是[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]
         return _mm256_and_si256(_mm256_set1_epi8(15),
                                 _mm256_insertf128_si256(_mm256_castsi128_si256(x),
@@ -1047,65 +1054,10 @@ class tinyBLAS_Q0_LOONGARCH {
     //m0=0,n0=0,m和n分别是两个矩阵没有重合的维度
     void mnpack(int64_t m0, int64_t m, int64_t n0, int64_t n) {
         int64_t mc, nc, mp, np;
-        //最大处理4*4的块？
         switch ((MIN(m - m0, 4) << 4) | MIN(n - n0, 4)) {
-#if VECTOR_REGISTERS == 32
-        case 0x44:
-            mc = 4;
-            nc = 4;
-            gemm<4, 4>(m0, m, n0, n);
-            break;
-        case 0x43:
-            mc = 4;
-            nc = 3;
-            gemm<4, 3>(m0, m, n0, n);
-            break;
-        case 0x34:
-            mc = 3;
-            nc = 4;
-            gemm<3, 4>(m0, m, n0, n);
-            break;
-        case 0x33:
-            mc = 3;
-            nc = 3;
-            gemm<3, 3>(m0, m, n0, n);
-            break;
-        case 0x42:
-            mc = 4;
-            nc = 2;
-            gemm<4, 2>(m0, m, n0, n);
-            break;
-        case 0x24:
-            mc = 2;
-            nc = 4;
-            gemm<2, 4>(m0, m, n0, n);
-            break;
-#else
         case 0x44:
         case 0x43:
         case 0x42:
-            mc = 4;
-            nc = 2;
-            gemm<4, 2>(m0, m, n0, n);
-            break;
-        case 0x34:
-        case 0x24:
-            mc = 2;
-            nc = 4;
-            gemm<2, 4>(m0, m, n0, n);
-            break;
-        case 0x33:
-#endif
-        case 0x32:
-            mc = 3;
-            nc = 2;
-            gemm<3, 2>(m0, m, n0, n);
-            break;
-        case 0x23:
-            mc = 2;
-            nc = 3;
-            gemm<2, 3>(m0, m, n0, n);
-            break;
         case 0x41:
             mc = 4;
             nc = 1;
@@ -1253,11 +1205,14 @@ class tinyBLAS_Q0_LOONGARCH {
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i) {
 
-                    //_mm256_sign_epi8：对于每一对输入向量的元素，如果第二个向量的元素是正数，保持第一个向量的对应元素不变；
-                    //如果第二个向量的元素是负数，将第一个向量的对应元素取相反数；如果第二个向量的元素是零，将第一个向量的对应元素变为零
                     //load函数从内存地址中加载数据，如果数据类型是block_q8_0，则直接加载一个block中量化后的256(8*32)位数据到向量中
                     //如果是block_q4_0，则将128位量化后数据放到256位向量中，且按照[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]调整顺序
-                    //undot将两个输入的对应位相乘，相邻4个相加，得到8个32位数
+                    //mul_sum_i8_pairs_float将两个输入的对应位相乘，相邻4个相加，得到8个32位数
+
+                    //B中是q8_0,A是q4_0
+                    //对于gemm<4,1>(即decode阶段），B中load的数据可以在和A的其他列相乘时重复利用
+                    //此外，mul_sum_i8_pairs_float中的signcov(B,B)，也可以在i循环时，重复利用计算好的结果
+                    //但是gemm<4,4>，gemm<4,2>，gemm<4,3>就没这个两优化
                         __m256 udTmp = mul_sum_i8_pairs_float(load(B + ldb * (jj + j) + l),
                                                               load(A + lda * (ii + i) + l));
 

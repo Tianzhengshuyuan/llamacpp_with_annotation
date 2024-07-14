@@ -169,25 +169,29 @@ endif
 #
 
 # keep standard at C11 and C++11
-MK_CPPFLAGS  = -I. -Icommon -g -O0
-MK_CFLAGS    = -std=c11   -fPIC  -g -O0
-MK_CXXFLAGS  = -std=c++11 -fPIC -g -O0
-MK_NVCCFLAGS = -std=c++11  -g -O0
+# MK_CPPFLAGS  = -I. -Icommon -g -O0
+# MK_CFLAGS    = -std=c11   -fPIC  -g -O0
+# MK_CXXFLAGS  = -std=c++11 -fPIC -g -O0
+# MK_NVCCFLAGS = -std=c++11  -g -O0
+MK_CPPFLAGS  = -I. -Icommon
+MK_CFLAGS    = -std=c11   -fPIC 
+MK_CXXFLAGS  = -std=c++11 -fPIC 
+MK_NVCCFLAGS = -std=c++11  
 
-# # -Ofast tends to produce faster code, but may not be available for some compilers.
-# ifdef LLAMA_FAST
-# MK_CFLAGS     += -Ofast
-# HOST_CXXFLAGS += -Ofast
-# ifndef LLAMA_DEBUG
-# MK_NVCCFLAGS  += -O3
-# endif # LLAMA_DEBUG
-# else
-# MK_CFLAGS     += -O3
-# MK_CXXFLAGS   += -O3
-# ifndef LLAMA_DEBUG
-# MK_NVCCFLAGS  += -O3
-# endif # LLAMA_DEBUG
-# endif # LLAMA_FAST
+# -Ofast tends to produce faster code, but may not be available for some compilers.
+ifdef LLAMA_FAST
+MK_CFLAGS     += -Ofast
+HOST_CXXFLAGS += -Ofast
+ifndef LLAMA_DEBUG
+MK_NVCCFLAGS  += -O3
+endif # LLAMA_DEBUG
+else
+MK_CFLAGS     += -O3
+MK_CXXFLAGS   += -O3
+ifndef LLAMA_DEBUG
+MK_NVCCFLAGS  += -O3
+endif # LLAMA_DEBUG
+endif # LLAMA_FAST
 
 ifndef LLAMA_NO_CCACHE
 CCACHE := $(shell which ccache)

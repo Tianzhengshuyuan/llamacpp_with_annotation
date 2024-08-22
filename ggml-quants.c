@@ -27,7 +27,7 @@
 #define UNUSED GGML_UNUSED
 
 // some compilers don't provide _mm256_set_m128i, e.g. gcc 7
-//128位向量a在高位，b在低位，共同构成一个256位的向量
+//128位向量a在高位，b在低位，共同构成一个256位的向量，对应vinserti128
 #define MM256_SET_M128I(a, b) _mm256_insertf128_si256(_mm256_castsi128_si256(b), (a), 1)
 
 #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__) || defined(__SSSE3__)
@@ -97,8 +97,9 @@ static inline __m256i bytes_from_bits_32(const uint8_t * x) {
 // The output vector contains 32 bytes, each one in [ 0 .. 15 ] interval
 //把32个4bit的向量变为32个8bit的向量，但是顺序变了：1、3、5、...15、0、2、...14
 static inline __m256i bytes_from_nibbles_32(const uint8_t * rsi)
-{
+{   //_mm_loadu_si128从内存加载128位数据到向量寄存器，maybe对应： vmovdqu      0x2(%rcx),%xmm0
     const __m128i tmp = _mm_loadu_si128((const __m128i *)rsi);
+    //MM256_SET_M128I对应vinserti128
     const __m256i bytes = MM256_SET_M128I(_mm_srli_epi16(tmp, 4), tmp); //_mm_srli_epi16(tmp, 4)在高位, tmp在低位，共同构成一个256位的向量
     const __m256i lowMask = _mm256_set1_epi8( 0xF );
     return _mm256_and_si256(lowMask, bytes); //lowMask和bytes按位与
@@ -117,7 +118,10 @@ static inline __m256 sum_i16_pairs_float(const __m256i x) {
 static inline __m256 mul_sum_us8_pairs_float(const __m256i ax, const __m256i sy) {
 #if defined(__AVXVNNI__) || (defined(__AVX512VNNI__) && defined(__AVX512VL__))
     const __m256i zero = _mm256_setzero_si256();
+    //_mm256_dpbusd_epi32->VPDPBUSD
+    //计算 src1(32个8位整数) 和 src2 (32个8位整数)之间的点积，并将结果加到 acc(8个32位整数)上
     const __m256i summed_pairs = _mm256_dpbusd_epi32(zero, ax, sy);
+    //将 256 位的 32 位整数向量（类型为 __m256i）转换为 256 位的单精度浮点值向量（类型为 __m256），对应 vcvtdq2ps 
     return _mm256_cvtepi32_ps(summed_pairs);
 #else
     // Perform multiplication and create 16-bit values
@@ -652,12 +656,13 @@ static inline __m256i bytes_from_bits_32(const uint8_t * x) {
 // Unpack 32 4-bit fields into 32 bytes
 // The output vector contains 32 bytes, each one in [ 0 .. 15 ] interval
 static inline __m256i bytes_from_nibbles_32(const uint8_t * rsi) {
-    //从内存地址(rsi+0) load一个128位的向量，128=32 * 4
+    //从内存地址(rsi+0) load一个128位的向量，128=32 * 4  // vld
     const __m128i lo = __lsx_vld((const __m128i *)rsi, 0);
-    //128位向量中每16位向量右移4位后得到hi
+    //128位向量中每16位向量右移4位后得到hi //vsrli
     __m128i hi = __lsx_vsrli_h(lo, 4);
     //hi和lo拼成256位，得到的数的32个字节均与0xf按位与
     //最后128位向量中每个4位元素扩展为8位[0,1,2...31] -> [0,2,...30,1,3,...31]
+    //xvpermi.q  xvori.b  xvandi.b
     return __lasx_xvandi_b(lasx_insertf128(hi, lo), 0xf);
 }
 
@@ -691,7 +696,8 @@ static inline __m256 mul_sum_i8_pairs_float(const __m256i x, const __m256i y) {
     const __m256i ax = __lasx_xvsigncov_b(x, x);
     // Sign the values of the y vectors
     const __m256i sy = __lasx_xvsigncov_b(x, y);
-
+    // xvmulwev.h.b  xvmulwod.h.b  xvsadd.h
+    // xvpackod.h  xvaddwev.w.h  xvffint.s.w
     return mul_sum_us8_pairs_float(ax, sy);
 }
 
@@ -3896,7 +3902,7 @@ static inline __m128i get_scale_shuffle(int i) {
 #endif
 
 void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
-    const int qk = QK8_0;
+    const int qk = QK8_0; //QK8_0=32
     const int nb = n / qk;
 
     assert(n % qk == 0);
@@ -3923,24 +3929,32 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
         float32x4_t sumv0 = vdupq_n_f32(0.0f);
 
         for (int i = 0; i < nb; i++) {
+            //同时处理两行x和两行y
             const block_q4_0 * restrict b_x0 = &vx0[i];
             const block_q4_0 * restrict b_x1 = &vx1[i];
             const block_q8_0 * restrict b_y0 = &vy0[i];
             const block_q8_0 * restrict b_y1 = &vy1[i];
 
+            //vdupq_n_u8把8位无符号整数复制到128位向量
             const uint8x16_t m4b = vdupq_n_u8(0x0F);
+            //vdupq_n_u8把8位有符号整数复制到128位向量
             const int8x16_t  s8b = vdupq_n_s8(0x8);
 
+            //vld1q_u8从内存中加载16个8位无符号整数，并将其存储在一个128位的向量寄存器中。
             const uint8x16_t v0_0 = vld1q_u8(b_x0->qs);
             const uint8x16_t v0_1 = vld1q_u8(b_x1->qs);
 
             // 4-bit -> 8-bit
+            //vandq_u8对两个128位的向量寄存器中的8位无符号整数执行逐位按位与（bitwise AND）操作
+            //vshrq_n_u8对128位向量寄存器中的每个8位无符号整数元素逻辑右移4位
+            //vreinterpretq_s8_u8将一个128位的无符号8位整数向量（uint8x16_t）重新解释为128位的有符号8位整数向量
             const int8x16_t v0_0l = vreinterpretq_s8_u8(vandq_u8  (v0_0, m4b));
             const int8x16_t v0_0h = vreinterpretq_s8_u8(vshrq_n_u8(v0_0, 4));
             const int8x16_t v0_1l = vreinterpretq_s8_u8(vandq_u8  (v0_1, m4b));
             const int8x16_t v0_1h = vreinterpretq_s8_u8(vshrq_n_u8(v0_1, 4));
 
             // sub 8
+            //对两个128位向量寄存器中的8位有符号整数进行逐元素的减法操作
             const int8x16_t x0_l = vsubq_s8(v0_0l, s8b);
             const int8x16_t x0_h = vsubq_s8(v0_0h, s8b);
             const int8x16_t x1_l = vsubq_s8(v0_1l, s8b);
@@ -3956,9 +3970,13 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
                                     GGML_FP16_TO_FP32(b_x0->d)*GGML_FP16_TO_FP32(b_y1->d),
                                     GGML_FP16_TO_FP32(b_x1->d)*GGML_FP16_TO_FP32(b_y0->d),
                                     GGML_FP16_TO_FP32(b_x1->d)*GGML_FP16_TO_FP32(b_y1->d)};
-
+            
+            //vld1q_f32从内存中加载一组 32 位浮点数，并将其存储在一个 128 位的向量寄存器中
             float32x4_t scale = vld1q_f32(_scale);
 
+            //vreinterpretq_s64_s8将一个包含 8 位有符号整数（int8x16_t）的向量重新解释为包含 64 位有符号整数（int64x2_t）的向量
+            //vzip1q_s64包含两个操作数的低64位
+            //vzip2q_s64包含两个操作数的高64位
             int8x16_t l0 = vreinterpretq_s8_s64(vzip1q_s64(vreinterpretq_s64_s8(x0_l), vreinterpretq_s64_s8(x1_l)));
             int8x16_t l1 = vreinterpretq_s8_s64(vzip2q_s64(vreinterpretq_s64_s8(x0_l), vreinterpretq_s64_s8(x1_l)));
 
@@ -3971,12 +3989,22 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
             int8x16_t r2 = vreinterpretq_s8_s64(vzip1q_s64(vreinterpretq_s64_s8(y0_h), vreinterpretq_s64_s8(y1_h)));
             int8x16_t r3 = vreinterpretq_s8_s64(vzip2q_s64(vreinterpretq_s64_s8(y0_h), vreinterpretq_s64_s8(y1_h)));
 
+            //vdupq_n_s32将一个 32 位有符号整数（int32_t）复制到一个 128 位的向量寄存器的所有元素中。
+            //vmmlaq_s32有符号 8 位整数矩阵乘法累加。该指令将第一个源向量中的有符号 8 位整数值的 2x8 矩阵乘以第二个源向量中的有符号 8 位整数值的 8x2 矩阵。生成的 2x2 32 位整数矩阵乘积被破坏性地添加到目标向量中的 32 位整数矩阵累加器
+            //vmmlaq_s32的两个操作数类型为int8x16，这个16可以理解为8x2的向量，返回值位int32x4，这个4可以理解为2x2的向量
+            //vcvtq_f32_s32将一个包含 32 位有符号整数的 128 位向量转换为一个包含 32 位浮点数的 128 位向量
+            //vmlaq_f32对两个float32x4的向量的对应元素进行乘法运算，然后将结果加到第三个128位浮点向量的对应元素上
             sumv0 = vmlaq_f32(sumv0,(vcvtq_f32_s32(vmmlaq_s32((vmmlaq_s32((vmmlaq_s32((vmmlaq_s32(vdupq_n_s32(0), l0, r0)),
                                                                                 l1, r1)), l2, r2)), l3, r3))), scale);
         }
+        //vextq_f32(a,b,n) a 向量的第 n 个元素开始，取 4 - n 个元素，然后从 b 向量的第 0 个元素开始，取 n 个元素，最终组合成一个新的向量。
+        //[0,1,2,3] -> [2,3,0,1]
         float32x4_t sumv1 = vextq_f32(sumv0, sumv0, 2);
+        //[0,2,1,3]
         float32x4_t sumv2 = vzip1q_f32(sumv0, sumv1);
 
+        //vget_low_f32从一个 128 位的向量寄存器中提取低 64 位（前两个 32 位浮点数），并返回一个 64 位的向量寄存器。
+        //vst1_f32将 64 位（两个 32 位浮点数）的向量数据存储到内存中。
         vst1_f32(s, vget_low_f32(sumv2));
         vst1_f32(s + bs, vget_high_f32(sumv2));
         return;
@@ -4020,6 +4048,8 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
 
     *s = svaddv_f32(svptrue_b32(), svadd_f32_x(svptrue_b32(), sumv0, sumv1));
 #elif defined(__ARM_NEON)
+    //ARM NEON指令集有32个128位向量寄存器
+    //vdupq_n_f32将单精度浮点数复制到一个128位向量寄存器
     float32x4_t sumv0 = vdupq_n_f32(0.0f);
     float32x4_t sumv1 = vdupq_n_f32(0.0f);
 
@@ -4030,39 +4060,50 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
         const block_q4_0 * restrict x1 = &x[i + 1];
         const block_q8_0 * restrict y0 = &y[i + 0];
         const block_q8_0 * restrict y1 = &y[i + 1];
-
+        //vdupq_n_u8把8位无符号整数复制到128位向量
         const uint8x16_t m4b = vdupq_n_u8(0x0F);
+        //vdupq_n_u8把8位有符号整数复制到128位向量
         const int8x16_t  s8b = vdupq_n_s8(0x8);
-
+        //从内存中加载16个8位无符号整数，并将其存储在一个128位的向量寄存器中。
         const uint8x16_t v0_0 = vld1q_u8(x0->qs);
         const uint8x16_t v0_1 = vld1q_u8(x1->qs);
 
         // 4-bit -> 8-bit
+        //vandq_u8对两个128位的向量寄存器中的8位无符号整数执行逐位按位与（bitwise AND）操作
+        //vshrq_n_u8对128位向量寄存器中的每个8位无符号整数元素逻辑右移4位
+        //vreinterpretq_s8_u8将一个128位的无符号8位整数向量（uint8x16_t）重新解释为128位的有符号8位整数向量
         const int8x16_t v0_0l = vreinterpretq_s8_u8(vandq_u8  (v0_0, m4b));
         const int8x16_t v0_0h = vreinterpretq_s8_u8(vshrq_n_u8(v0_0, 4));
         const int8x16_t v0_1l = vreinterpretq_s8_u8(vandq_u8  (v0_1, m4b));
         const int8x16_t v0_1h = vreinterpretq_s8_u8(vshrq_n_u8(v0_1, 4));
 
         // sub 8
+        //对两个128位向量寄存器中的8位有符号整数进行逐元素的减法操作
         const int8x16_t v0_0ls = vsubq_s8(v0_0l, s8b);
         const int8x16_t v0_0hs = vsubq_s8(v0_0h, s8b);
         const int8x16_t v0_1ls = vsubq_s8(v0_1l, s8b);
         const int8x16_t v0_1hs = vsubq_s8(v0_1h, s8b);
 
         // load y
+        //vld1q_s8从内存加载8位有符号整数数据到128位的向量寄存器中。
+        //qs中有32个8位量化后数据，但是vld1q_s8一次只能load出来128位数据（16*8)，所以需要load两次
         const int8x16_t v1_0l = vld1q_s8(y0->qs);
         const int8x16_t v1_0h = vld1q_s8(y0->qs + 16);
         const int8x16_t v1_1l = vld1q_s8(y1->qs);
         const int8x16_t v1_1h = vld1q_s8(y1->qs + 16);
 
         // dot product into int32x4_t
+        // vdupq_n_s32将一个32位有符号整数（int32_t）复制到一个128位的向量寄存器的所有元素中
+        // vdotq_s32计算的是两个包含16个8位整数的128位向量的点积，得到的16个8位结果，相邻4个加起来，并将结果累加到包含4个32位整数的向量寄存器中。
         const int32x4_t p_0 = ggml_vdotq_s32(ggml_vdotq_s32(vdupq_n_s32(0), v0_0ls, v1_0l), v0_0hs, v1_0h);
         const int32x4_t p_1 = ggml_vdotq_s32(ggml_vdotq_s32(vdupq_n_s32(0), v0_1ls, v1_1l), v0_1hs, v1_1h);
 
+        //vcvtq_f32_s32将一个包含 32 位有符号整数的 128 位向量转换为一个包含 32 位浮点数的 128 位向量
+        //vmlaq_n_f32将一个128位向量中的每个元素与一个标量相乘，然后将结果加到另一个128位向量的对应元素上。
         sumv0 = vmlaq_n_f32(sumv0, vcvtq_f32_s32(p_0), GGML_FP16_TO_FP32(x0->d)*GGML_FP16_TO_FP32(y0->d));
         sumv1 = vmlaq_n_f32(sumv1, vcvtq_f32_s32(p_1), GGML_FP16_TO_FP32(x1->d)*GGML_FP16_TO_FP32(y1->d));
     }
-
+    //对包含32位浮点数的128位向量寄存器中的所有元素做加法，并返回标量结果。
     *s = vaddvq_f32(sumv0) + vaddvq_f32(sumv1);
 #elif defined(__AVX2__)
     // Initialize accumulator with zeros
@@ -4073,7 +4114,10 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
     for (int i = 0; i < nb; ++i) {
         /* Compute combined scale for the block */
         //将d中的8个32位单精度浮点数都设置为x[i].d*y[i].d
-        const __m256 d = _mm256_set1_ps( GGML_FP16_TO_FP32(x[i].d) * GGML_FP16_TO_FP32(y[i].d) );
+        //GGML_FP16_TO_FP32(x[i].d) * GGML_FP16_TO_FP32(y[i].d)对应：
+        // vmovss       (%rdx,%rdi,4),%xmm1 
+        // vmulss       (%rdx,%rsi,4),%xmm1,%xmm1
+        const __m256 d = _mm256_set1_ps(GGML_FP16_TO_FP32(x[i].d) * GGML_FP16_TO_FP32(y[i].d));
 
         //把32个4位元素扩展为32个8位元素，且恰好调整元素顺序，使得x和y中元素一一对应
         __m256i qx = bytes_from_nibbles_32(x[i].qs);
@@ -4081,7 +4125,7 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
         // Now we have a vector with bytes in [ 0 .. 15 ] interval. Offset them into [ -8 .. +7 ] interval.
         // epi8指的是8位整数，这里是将256位向量中的32个8位整数都设置为8
         const __m256i off = _mm256_set1_epi8( 8 );
-        //给qx中的所有元素都减去8
+        //给qx中的所有元素都减去8，对应vpaddb
         qx = _mm256_sub_epi8( qx, off );
 
         __m256i qy = _mm256_loadu_si256((const __m256i *)y[i].qs);
@@ -4337,9 +4381,12 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
     __m256 acc = (__m256)__lasx_xvldi(0);
 
     // Main loop
+    // 结论：除了用向量指令没什么优化。。。
     for (int i = 0; i < nb; ++i) {
         /* Compute combined scale for the block */
-        //x[i].d * y[i].d的32位结果复制8份，放到256位的向量d中
+        // x[i].d * y[i].d的32位结果复制8份，放到256位的向量d中
+        // 乘法对应 fld.s  fld.s  fmul.s
+        // __lasx_xvreplfr2vr_s对应 movfr2gr.s   xvreplgr2vr.w
         const __m256 d = __lasx_xvreplfr2vr_s( GGML_FP16_TO_FP32(x[i].d) * GGML_FP16_TO_FP32(y[i].d) );
         //128位向量扩展为256位，且调整顺序[0,1,2...31] -> [0,2,...30,1,3,...31]
         __m256i qx = bytes_from_nibbles_32(x[i].qs);

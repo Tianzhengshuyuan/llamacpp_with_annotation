@@ -121,6 +121,7 @@ inline U madd(T a, T b, U c) {
 template <>
 inline __m256 madd(__m256 a, __m256 b, __m256 c) {
     //a[i]*b[i]+c[i], 0<=i<8
+    //VFMADDPS 
     return _mm256_fmadd_ps(a, b, c);
 }
 #endif
@@ -164,10 +165,10 @@ inline float hsum(float16x8_t x) {
 #if defined(__SSE__) || defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
 inline float hsum(__m128 x) {
 #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
-    //_mm_movehl_ps(x, x)把x的高64位放到新向量的高、低64位
-    //_mm_add_ps对4对浮点数执行加法：[x[0],x[1],x[2],x[3]] + [x[2],x[3],x[2],x[3]] = [x[0]+x[2],x[1]+x[3],x[2]+x[2],x[3]+x[3]]
+    //_mm_movehl_ps(x, x)把x的高64位放到新向量的高、低64位(VMOVHLPS)
+    //_mm_add_ps(VADDPS)对4对浮点数执行加法：[x[0],x[1],x[2],x[3]] + [x[2],x[3],x[2],x[3]] = [x[0]+x[2],x[1]+x[3],x[2]+x[2],x[3]+x[3]]
     x = _mm_add_ps(x, _mm_movehl_ps(x, x));
-    //_mm_movehdup_ps的作用是[a0, a1, a2, a3]->[a1, a1, a3, a3]
+    //_mm_movehdup_ps(VMOVSHDUP)的作用是[a0, a1, a2, a3]->[a1, a1, a3, a3]
     x = _mm_add_ss(x, _mm_movehdup_ps(x));
 #else
     __m128 t;
@@ -183,8 +184,8 @@ inline float hsum(__m128 x) {
 
 #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
 inline float hsum(__m256 x) {
-    //_mm256_castps256_ps128(x)取256位向量的低128位，_mm256_extractf128_ps(x, 1)取256位向量的高128位
-    //_mm_add_ps执行4对32位浮点数的加法
+    //_mm256_castps256_ps128(x)取256位向量的低128位，_mm256_extractf128_ps(x, 1)取256位向量的高128位(VEXTRACTF128)
+    //_mm_add_ps执行4对32位浮点数的加法(vaddps)
     //调用输入为128位的hsum,把128位向量中4个浮点数加起来
     return hsum(_mm_add_ps(_mm256_extractf128_ps(x, 1),
                            _mm256_castps256_ps128(x)));
@@ -224,6 +225,8 @@ template <> inline __m128 load(const float *p) {
 
 #if defined(__AVX__) || defined(__AVX2__) || defined(__AVX512F__)
 template <> inline __m256 load(const float *p) {
+    //针对f32的情况：对应vmovups，从内存加载256位数据
+    //针对f16的情况：对应vcvtph2ps，从内存加载128(=8*16)位数据，把每个16位数据变为32位数据，得到256位向量，写入向量寄存器里
     return _mm256_loadu_ps(p);
 }
 #endif // __AVX__
@@ -247,7 +250,7 @@ template <> inline __m512 load(const ggml_fp16_t *p) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // FLOATING POINT MATRIX MULTIPLICATION
-
+//KN = 8, D = __mm256, V = __mm256, TA = ggml_fp16_t, TB = float, TC = float
 template <int KN, typename D, typename V, typename TA, typename TB, typename TC>
 class tinyBLAS {
   public:
@@ -429,11 +432,16 @@ class tinyBLAS {
         for (int64_t job = start; job < end; ++job) {
             int64_t ii = m0 + job / xtiles * RM;
             int64_t jj = n0 + job % xtiles * RN;
+            //在AVX2中，D是__mm256
             D Cv[RN][RM] = {};
             for (int64_t l = 0; l < k; l += KN)
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i)
                         //lda和ldb是A和B第0维的元素个数
+                        //在AVX2中，V是__mm256； madd对应VFMADDPS 
+                        //以-p 128为例，输入的矩阵为4096 * 128，最多的是gemm<4,3>,其次是gemm<5,2>
+                        //gemm<4,3>和<5,2>中，当i变j固定时，只需要load一次B中的数
+                        //gemm<4,3>中，当j变化而取B不同的3个数时，A中4个数是不变的，故可以一直复用A第一次取好在向量寄存器里的值  //但是gemm<5,2>没有这个优化
                         Cv[j][i] = madd(load<V>(A + lda * (ii + i) + l),
                                         load<V>(B + ldb * (jj + j) + l),
                                         Cv[j][i]);
@@ -751,11 +759,14 @@ class tinyBLAS_Q0_AVX {
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i) {
 #if defined(__AVX2__)
-                    //_mm256_sign_epi8：对于每一对输入向量的元素，如果第二个向量的元素是正数，保持第一个向量的对应元素不变；
-                    //如果第二个向量的元素是负数，将第一个向量的对应元素取相反数；如果第二个向量的元素是零，将第一个向量的对应元素变为零
-                    //load函数从内存地址中加载数据，如果数据类型是block_q8_0，则直接加载一个block中量化后的256(8*32)位数据到向量中
-                    //如果是block_q4_0，则将128位量化后数据放到256位向量中，且按照[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]调整顺序
-                    //undot将两个输入的对应位相乘，相邻4个相加，得到8个32位数
+                        //_mm256_sign_epi8：对于每一对输入向量的元素，如果第二个向量的元素是正数，保持第一个向量的对应元素不变；
+                        //如果第二个向量的元素是负数，将第一个向量的对应元素取相反数；如果第二个向量的元素是零，将第一个向量的对应元素变为零
+                        //load函数从内存地址中加载数据，A为q4_0、B为q8_0:
+                            //如果数据类型是block_q8_0，则直接加载一个block中量化后的256(8*32)位数据到向量中
+                            //如果是block_q4_0，则将128位量化后数据放到256位向量中，且按照[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]调整顺序
+                        //undot将两个输入的对应位相乘，相邻4个相加，得到8个32位数
+                        //在gemm<4,1>、gemm<4,2>中，当i在循环而j不变时，可以节省load(B)的开销
+                        //在gemm<4,2>中，当j+1，然后开始i的循环时，可以节省4次sign(A,A)操作(还需要做4次sign),以及复杂的load(A)操作(说复杂是因为A是q4_0,比较麻烦)
                         __m256 udTmp = updot(_mm256_sign_epi8(load(A + lda * (ii + i) + l),
                                                               load(A + lda * (ii + i) + l)),
                                              _mm256_sign_epi8(load(B + ldb * (jj + j) + l),
@@ -778,8 +789,19 @@ class tinyBLAS_Q0_AVX {
                         __m256 udTmp = _mm256_cvtepi32_ps(MM256_SET_M128I(_mm_madd_epi16(oneFill, mad1), _mm_madd_epi16(oneFill, mad0)));
 #endif
                         //unhalf调用GGML_FP16_TO_FP32，把A和B的scale转为32位
-                        //_mm256_set1_ps将指定的单精度浮点数广播到 256 位的 AVX 寄存器的每个 32 位浮点数位置
+                        //unhalf(A) * unhalf(B)对应：vmovss       (%rsi,%rax,4),%xmm1
+                        //                          movzwl       (%rcx),%eax 
+                        //                          vmulss       (%rsi,%rax,4),%xmm1,%xmm10
+                        //eax是rax的低32位，rax为64位
+                        //也可能对应：               vmovss       (%rdx,%rax,4),%xmm7 
+                        //                          movzwl       (%rsi),%eax 
+                        //                          vmovss       (%rdx,%rax,4),%xmm4 
+                        //                          vmulss       %xmm7,%xmm4,%xmm1 
+                        //_mm256_set1_ps将指定的单精度浮点数广播到 256 位的 AVX 寄存器的每个 32 位浮点数位置(vbroadcastss)
                         //madd实现a[i]*b[i]+c[i]
+                        //在gemm<4,1>、gemm<4,2>中，当i在循环而j不变时，可以节省从内存加载B.d的开销
+                        //但是gemm<4,2>的寄存器不够？每次算出的Cv[j][i]要存回内存
+                        //madd使用fmaddps
                         Cv[j][i] = madd(_mm256_set1_ps(unhalf(A[lda * (ii + i) + l].d) *
                                                        unhalf(B[ldb * (jj + j) + l].d)),
                                                        udTmp,
@@ -792,7 +814,7 @@ class tinyBLAS_Q0_AVX {
     }
 
     inline __m256i load(const block_q8_0 *b) {
-        //_mm256_loadu_si256从内存加载256位数据到向量寄存器
+        //_mm256_loadu_si256从内存加载256位数据到向量寄存器(vmovdqu)
         return _mm256_loadu_si256((const __m256i *)b->qs);
     }
 
@@ -805,9 +827,9 @@ class tinyBLAS_Q0_AVX {
     }
 
     inline __m256i load(const block_q4_0 *b) {
-        //_mm256_set1_epi8(8)创建包含32个8位整数8的向量
+        //_mm256_set1_epi8(8)创建包含32个8位整数8的向量(VPSUBB)
         //denibble把128位数据放到256位向量里：[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]
-        //_mm256_sub_epi8给每个8位整数减8
+        //_mm256_sub_epi8给每个8位整数减8(vpaddb)
         return _mm256_sub_epi8(denibble(b->qs), _mm256_set1_epi8(8));
     }
 
@@ -824,6 +846,8 @@ class tinyBLAS_Q0_AVX {
     inline __m256 updot(__m256i u, __m256i s) {
         __m256i res;
 #if defined(__AVXVNNI__) || (defined(__AVX512VNNI__) && defined(__AVX512VL__))
+        //_mm256_dpbusd_epi32->VPDPBUSD
+        //计算 src1(32个8位整数) 和 src2 (32个8位整数)之间的点积，并将结果加到 acc(8个32位整数)上
         res = _mm256_dpbusd_epi32(_mm256_setzero_si256(), u, s);
 #else
         //_mm256_set1_epi16(1)把16位整数1广播到256位寄存器的每个16位
@@ -832,18 +856,18 @@ class tinyBLAS_Q0_AVX {
         //相当于是_mm256_maddubs_epi16(u, s)得到的16个16位数相邻2个相加
         res = _mm256_madd_epi16(_mm256_set1_epi16(1), _mm256_maddubs_epi16(u, s));
 #endif
-        //将寄存器中的 8 个 32 位整数转换为 8 个单精度浮点数
+        //将寄存器中的 8 个 32 位整数转换为 8 个单精度浮点数(VCVTDQ2PS)
         return _mm256_cvtepi32_ps(res);
     }
 
     static inline __m256i denibble(const uint8_t *p) {
-        //_mm_loadu_si128从指定的内存位置加载128位数据到x中
+        //_mm_loadu_si128从指定的内存位置加载128位数据到x中(vmovdqu)
         __m128i x = _mm_loadu_si128((const __m128i *)p);
         //_mm256_set1_epi8(15)将256位向量中32个8位整数都设为15, 15=0b00001111
         //_mm256_castsi128_si256(x)将x设为一个256位向量的低128位
-        //_mm_srli_epi16(x, 4)将128位向量中每个16位元素右移4位
-        //_mm256_insertf128_si256将_mm_srli_epi16(x, 4)插入_mm256_castsi128_si256(x)生成的256位向量高位
-        //_mm256_and_si256对两个256位向量执行按位与
+        //_mm_srli_epi16(x, 4)将128位向量中每个16位元素右移4位(vpsrlw)
+        //_mm256_insertf128_si256将_mm_srli_epi16(x, 4)插入_mm256_castsi128_si256(x)生成的256位向量高位(vinserti128)
+        //_mm256_and_si256对两个256位向量执行按位与(vpand)
         //最后得到的是[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]
         return _mm256_and_si256(_mm256_set1_epi8(15),
                                 _mm256_insertf128_si256(_mm256_castsi128_si256(x),

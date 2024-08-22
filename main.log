@@ -1,205 +1,202 @@
-[1720613316] Log start
-[1720613316] Cmd: /home/tianzhengshuyuan/llama.cpp/llama-cli -m /mnt/nfs_share/X86_GGUF/Llama-2-7b-hf/ggml-model-Q4_0.gguf -t 1 -n 512 --repeat_penalty 1.0 --color -i -r User: -f prompts/chat-with-bob.txt
-[1720613316] main: build = 1 (04ec767)
-[1720613316] main: built with cc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0 for x86_64-linux-gnu
-[1720613316] main: seed  = 1720613316
-[1720613316] main: llama backend init
-[1720613316] main: load the model and apply lora adapter, if any
-[1720613316] llama_model_loader: loaded meta data with 23 key-value pairs and 291 tensors from /mnt/nfs_share/X86_GGUF/Llama-2-7b-hf/ggml-model-Q4_0.gguf (version GGUF V3 (latest))
-[1720613316] llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
-[1720613316] llama_model_loader: - kv   0:                       general.architecture str              = llama
-[1720613316] llama_model_loader: - kv   1:                               general.name str              = Llama-2-7b-hf
-[1720613316] llama_model_loader: - kv   2:                          llama.block_count u32              = 32
-[1720613316] llama_model_loader: - kv   3:                       llama.context_length u32              = 4096
-[1720613316] llama_model_loader: - kv   4:                     llama.embedding_length u32              = 4096
-[1720613316] llama_model_loader: - kv   5:                  llama.feed_forward_length u32              = 11008
-[1720613316] llama_model_loader: - kv   6:                 llama.attention.head_count u32              = 32
-[1720613316] llama_model_loader: - kv   7:              llama.attention.head_count_kv u32              = 32
-[1720613316] llama_model_loader: - kv   8:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
-[1720613316] llama_model_loader: - kv   9:                          general.file_type u32              = 2
-[1720613316] llama_model_loader: - kv  10:                           llama.vocab_size u32              = 32000
-[1720613316] llama_model_loader: - kv  11:                 llama.rope.dimension_count u32              = 128
-[1720613316] llama_model_loader: - kv  12:                       tokenizer.ggml.model str              = llama
-[1720613316] llama_model_loader: - kv  13:                         tokenizer.ggml.pre str              = default
-[1720613316] llama_model_loader: - kv  14:                      tokenizer.ggml.tokens arr[str,32000]   = ["<unk>", "<s>", "</s>", "<0x00>", "<...
-[1720613316] llama_model_loader: - kv  15:                      tokenizer.ggml.scores arr[f32,32000]   = [0.000000, 0.000000, 0.000000, 0.0000...
-[1720613316] llama_model_loader: - kv  16:                  tokenizer.ggml.token_type arr[i32,32000]   = [2, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, ...
-[1720613316] llama_model_loader: - kv  17:                tokenizer.ggml.bos_token_id u32              = 1
-[1720613316] llama_model_loader: - kv  18:                tokenizer.ggml.eos_token_id u32              = 2
-[1720613316] llama_model_loader: - kv  19:            tokenizer.ggml.unknown_token_id u32              = 0
-[1720613316] llama_model_loader: - kv  20:               tokenizer.ggml.add_bos_token bool             = true
-[1720613316] llama_model_loader: - kv  21:               tokenizer.ggml.add_eos_token bool             = false
-[1720613316] llama_model_loader: - kv  22:               general.quantization_version u32              = 2
-[1720613316] llama_model_loader: - type  f32:   65 tensors
-[1720613316] llama_model_loader: - type q4_0:  225 tensors
-[1720613316] llama_model_loader: - type q6_K:    1 tensors
-[1720613316] llm_load_vocab: special tokens cache size = 259
-[1720613316] llm_load_vocab: token to piece cache size = 0.1684 MB
-[1720613316] llm_load_print_meta: format           = GGUF V3 (latest)
-[1720613316] llm_load_print_meta: arch             = llama
-[1720613316] llm_load_print_meta: vocab type       = SPM
-[1720613316] llm_load_print_meta: n_vocab          = 32000
-[1720613316] llm_load_print_meta: n_merges         = 0
-[1720613316] llm_load_print_meta: n_ctx_train      = 4096
-[1720613316] llm_load_print_meta: n_embd           = 4096
-[1720613316] llm_load_print_meta: n_head           = 32
-[1720613316] llm_load_print_meta: n_head_kv        = 32
-[1720613316] llm_load_print_meta: n_layer          = 32
-[1720613316] llm_load_print_meta: n_rot            = 128
-[1720613316] llm_load_print_meta: n_embd_head_k    = 128
-[1720613316] llm_load_print_meta: n_embd_head_v    = 128
-[1720613316] llm_load_print_meta: n_gqa            = 1
-[1720613316] llm_load_print_meta: n_embd_k_gqa     = 4096
-[1720613316] llm_load_print_meta: n_embd_v_gqa     = 4096
-[1720613316] llm_load_print_meta: f_norm_eps       = 0.0e+00
-[1720613316] llm_load_print_meta: f_norm_rms_eps   = 1.0e-05
-[1720613316] llm_load_print_meta: f_clamp_kqv      = 0.0e+00
-[1720613316] llm_load_print_meta: f_max_alibi_bias = 0.0e+00
-[1720613316] llm_load_print_meta: f_logit_scale    = 0.0e+00
-[1720613316] llm_load_print_meta: n_ff             = 11008
-[1720613316] llm_load_print_meta: n_expert         = 0
-[1720613316] llm_load_print_meta: n_expert_used    = 0
-[1720613316] llm_load_print_meta: causal attn      = 1
-[1720613316] llm_load_print_meta: pooling type     = 0
-[1720613316] llm_load_print_meta: rope type        = 0
-[1720613316] llm_load_print_meta: rope scaling     = linear
-[1720613316] llm_load_print_meta: freq_base_train  = 10000.0
-[1720613316] llm_load_print_meta: freq_scale_train = 1
-[1720613316] llm_load_print_meta: n_ctx_orig_yarn  = 4096
-[1720613316] llm_load_print_meta: rope_finetuned   = unknown
-[1720613316] llm_load_print_meta: ssm_d_conv       = 0
-[1720613316] llm_load_print_meta: ssm_d_inner      = 0
-[1720613316] llm_load_print_meta: ssm_d_state      = 0
-[1720613316] llm_load_print_meta: ssm_dt_rank      = 0
-[1720613316] llm_load_print_meta: model type       = 7B
-[1720613316] llm_load_print_meta: model ftype      = Q4_0
-[1720613316] llm_load_print_meta: model params     = 6.74 B
-[1720613316] llm_load_print_meta: model size       = 3.56 GiB (4.54 BPW) 
-[1720613316] llm_load_print_meta: general.name     = Llama-2-7b-hf
-[1720613316] llm_load_print_meta: BOS token        = 1 '<s>'
-[1720613316] llm_load_print_meta: EOS token        = 2 '</s>'
-[1720613316] llm_load_print_meta: UNK token        = 0 '<unk>'
-[1720613316] llm_load_print_meta: LF token         = 13 '<0x0A>'
-[1720613316] llm_load_tensors: ggml ctx size =    0.15 MiB
-[1720613316] llm_load_tensors:        CPU buffer size =  3647.87 MiB
-[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] .[1720613316] 
-[1720613316] llama_new_context_with_model: n_ctx      = 4096
-[1720613316] llama_new_context_with_model: n_batch    = 2048
-[1720613316] llama_new_context_with_model: n_ubatch   = 512
-[1720613316] llama_new_context_with_model: flash_attn = 0
-[1720613316] llama_new_context_with_model: freq_base  = 10000.0
-[1720613316] llama_new_context_with_model: freq_scale = 1
-[1720613316] llama_kv_cache_init:        CPU KV buffer size =  2048.00 MiB
-[1720613316] llama_new_context_with_model: KV self size  = 2048.00 MiB, K (f16): 1024.00 MiB, V (f16): 1024.00 MiB
-[1720613316] llama_new_context_with_model:        CPU  output buffer size =     0.12 MiB
-[1720613316] llama_new_context_with_model:        CPU compute buffer size =   296.01 MiB
-[1720613316] llama_new_context_with_model: graph nodes  = 1030
-[1720613316] llama_new_context_with_model: graph splits = 1
-[1720613316] warming up the model with an empty run
-[1720613391] n_ctx: 4096
-[1720613391] 
-[1720613391] system_info: n_threads = 1 / 24 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | BLAS = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | LLAMAFILE = 1 | 
-[1720613391] add_bos: 1
-[1720613391] tokenize the prompt
-[1720613391] prompt: "Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision.
+[1721871965] Log start
+[1721871965] Cmd: ./llama-cli -m /mnt/nfs_share/LLMs/llama2-7b/ggml-model-f32.gguf -n 512 --repeat_penalty 1.0 --color -i -r User: -f prompts/chat-with-bob.txt
+[1721871965] main: build = 2 (3799107)
+[1721871965] main: built with cc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0 for x86_64-linux-gnu
+[1721871965] main: seed  = 1721871965
+[1721871965] main: llama backend init
+[1721871965] main: load the model and apply lora adapter, if any
+[1721871965] llama_model_loader: loaded meta data with 16 key-value pairs and 291 tensors from /mnt/nfs_share/LLMs/llama2-7b/ggml-model-f32.gguf (version GGUF V3 (latest))
+[1721871965] llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+[1721871965] llama_model_loader: - kv   0:                       general.architecture str              = llama
+[1721871965] llama_model_loader: - kv   1:                               general.name str              = LLaMA v2
+[1721871965] llama_model_loader: - kv   2:                           llama.vocab_size u32              = 32000
+[1721871965] llama_model_loader: - kv   3:                       llama.context_length u32              = 4096
+[1721871965] llama_model_loader: - kv   4:                     llama.embedding_length u32              = 4096
+[1721871965] llama_model_loader: - kv   5:                          llama.block_count u32              = 32
+[1721871965] llama_model_loader: - kv   6:                  llama.feed_forward_length u32              = 11008
+[1721871965] llama_model_loader: - kv   7:                 llama.rope.dimension_count u32              = 128
+[1721871965] llama_model_loader: - kv   8:                 llama.attention.head_count u32              = 32
+[1721871965] llama_model_loader: - kv   9:              llama.attention.head_count_kv u32              = 32
+[1721871965] llama_model_loader: - kv  10:     llama.attention.layer_norm_rms_epsilon f32              = 0.000010
+[1721871965] llama_model_loader: - kv  11:                          general.file_type u32              = 0
+[1721871965] llama_model_loader: - kv  12:                       tokenizer.ggml.model str              = llama
+[1721871965] llama_model_loader: - kv  13:                      tokenizer.ggml.tokens arr[str,32000]   = ["<unk>", "<s>", "</s>", "<0x00>", "<...
+[1721871965] llama_model_loader: - kv  14:                      tokenizer.ggml.scores arr[f32,32000]   = [0.000000, 0.000000, 0.000000, 0.0000...
+[1721871965] llama_model_loader: - kv  15:                  tokenizer.ggml.token_type arr[i32,32000]   = [2, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, ...
+[1721871965] llama_model_loader: - type  f32:  291 tensors
+[1721871965] llm_load_vocab: special tokens cache size = 259
+[1721871965] llm_load_vocab: token to piece cache size = 0.1684 MB
+[1721871965] llm_load_print_meta: format           = GGUF V3 (latest)
+[1721871965] llm_load_print_meta: arch             = llama
+[1721871965] llm_load_print_meta: vocab type       = SPM
+[1721871965] llm_load_print_meta: n_vocab          = 32000
+[1721871965] llm_load_print_meta: n_merges         = 0
+[1721871965] llm_load_print_meta: n_ctx_train      = 4096
+[1721871965] llm_load_print_meta: n_embd           = 4096
+[1721871965] llm_load_print_meta: n_head           = 32
+[1721871965] llm_load_print_meta: n_head_kv        = 32
+[1721871965] llm_load_print_meta: n_layer          = 32
+[1721871965] llm_load_print_meta: n_rot            = 128
+[1721871965] llm_load_print_meta: n_embd_head_k    = 128
+[1721871965] llm_load_print_meta: n_embd_head_v    = 128
+[1721871965] llm_load_print_meta: n_gqa            = 1
+[1721871965] llm_load_print_meta: n_embd_k_gqa     = 4096
+[1721871965] llm_load_print_meta: n_embd_v_gqa     = 4096
+[1721871965] llm_load_print_meta: f_norm_eps       = 0.0e+00
+[1721871965] llm_load_print_meta: f_norm_rms_eps   = 1.0e-05
+[1721871965] llm_load_print_meta: f_clamp_kqv      = 0.0e+00
+[1721871965] llm_load_print_meta: f_max_alibi_bias = 0.0e+00
+[1721871965] llm_load_print_meta: f_logit_scale    = 0.0e+00
+[1721871965] llm_load_print_meta: n_ff             = 11008
+[1721871965] llm_load_print_meta: n_expert         = 0
+[1721871965] llm_load_print_meta: n_expert_used    = 0
+[1721871965] llm_load_print_meta: causal attn      = 1
+[1721871965] llm_load_print_meta: pooling type     = 0
+[1721871965] llm_load_print_meta: rope type        = 0
+[1721871965] llm_load_print_meta: rope scaling     = linear
+[1721871965] llm_load_print_meta: freq_base_train  = 10000.0
+[1721871965] llm_load_print_meta: freq_scale_train = 1
+[1721871965] llm_load_print_meta: n_ctx_orig_yarn  = 4096
+[1721871965] llm_load_print_meta: rope_finetuned   = unknown
+[1721871965] llm_load_print_meta: ssm_d_conv       = 0
+[1721871965] llm_load_print_meta: ssm_d_inner      = 0
+[1721871965] llm_load_print_meta: ssm_d_state      = 0
+[1721871965] llm_load_print_meta: ssm_dt_rank      = 0
+[1721871965] llm_load_print_meta: model type       = 7B
+[1721871965] llm_load_print_meta: model ftype      = all F32
+[1721871965] llm_load_print_meta: model params     = 6.74 B
+[1721871965] llm_load_print_meta: model size       = 25.10 GiB (32.00 BPW) 
+[1721871965] llm_load_print_meta: general.name     = LLaMA v2
+[1721871965] llm_load_print_meta: BOS token        = 1 '<s>'
+[1721871965] llm_load_print_meta: EOS token        = 2 '</s>'
+[1721871965] llm_load_print_meta: UNK token        = 0 '<unk>'
+[1721871965] llm_load_print_meta: LF token         = 13 '<0x0A>'
+[1721871965] llm_load_tensors: ggml ctx size =    0.15 MiB
+[1721871967] llm_load_tensors:        CPU buffer size = 25705.02 MiB
+[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] .[1721871967] 
+[1721871967] llama_new_context_with_model: n_ctx      = 4096
+[1721871967] llama_new_context_with_model: n_batch    = 2048
+[1721871967] llama_new_context_with_model: n_ubatch   = 512
+[1721871967] llama_new_context_with_model: flash_attn = 0
+[1721871967] llama_new_context_with_model: freq_base  = 10000.0
+[1721871967] llama_new_context_with_model: freq_scale = 1
+[1721871968] llama_kv_cache_init:        CPU KV buffer size =  2048.00 MiB
+[1721871968] llama_new_context_with_model: KV self size  = 2048.00 MiB, K (f16): 1024.00 MiB, V (f16): 1024.00 MiB
+[1721871968] llama_new_context_with_model:        CPU  output buffer size =     0.12 MiB
+[1721871968] llama_new_context_with_model:        CPU compute buffer size =   296.01 MiB
+[1721871968] llama_new_context_with_model: graph nodes  = 1030
+[1721871968] llama_new_context_with_model: graph splits = 1
+[1721871968] warming up the model with an empty run
+[1721871968] n_ctx: 4096
+[1721871968] 
+[1721871968] system_info: n_threads = 8 / 24 | AVX = 1 | AVX_VNNI = 1 | AVX2 = 1 | AVX512 = 0 | AVX512_VBMI = 0 | AVX512_VNNI = 0 | AVX512_BF16 = 0 | FMA = 1 | NEON = 0 | SVE = 0 | ARM_FMA = 0 | F16C = 1 | FP16_VA = 0 | WASM_SIMD = 0 | BLAS = 0 | SSE3 = 1 | SSSE3 = 1 | VSX = 0 | MATMUL_INT8 = 0 | LLAMAFILE = 1 | 
+[1721871968] add_bos: 1
+[1721871968] tokenize the prompt
+[1721871968] prompt: "Transcript of a dialog, where the User interacts with an Assistant named Bob. Bob is helpful, kind, honest, good at writing, and never fails to answer the User's requests immediately and with precision.
 
 User: Hello, Bob.
 Bob: Hello. How may I help you today?
 User: Please tell me the largest city in Europe.
 Bob: Sure. The largest city in Europe is Moscow, the capital of Russia.
 User:"
-[1720613391] tokens: [ '<s>':1, ' Trans':4103, 'cript':924, ' of':310, ' a':263, ' dialog':7928, ',':29892, ' where':988, ' the':278, ' User':4911, ' interact':16254, 's':29879, ' with':411, ' an':385, ' Ass':4007, 'istant':22137, ' named':4257, ' Bob':7991, '.':29889, ' Bob':7991, ' is':338, ' helpful':8444, ',':29892, ' kind':2924, ',':29892, ' honest':15993, ',':29892, ' good':1781, ' at':472, ' writing':5007, ',':29892, ' and':322, ' never':2360, ' fails':8465, ' to':304, ' answer':1234, ' the':278, ' User':4911, ''':29915, 's':29879, ' requests':7274, ' immediately':7389, ' and':322, ' with':411, ' precision':16716, '.':29889, '':13, '':13, 'User':2659, ':':29901, ' Hello':15043, ',':29892, ' Bob':7991, '.':29889, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659, ':':29901, ' Please':3529, ' tell':2649, ' me':592, ' the':278, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, '.':29889, '':13, 'Bob':29362, ':':29901, ' Sure':18585, '.':29889, ' The':450, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, ' is':338, ' Moscow':25820, ',':29892, ' the':278, ' capital':7483, ' of':310, ' Russia':12710, '.':29889, '':13, 'User':2659, ':':29901 ]
-[1720613391] recalculate the cached logits (check): embd_inp.empty() false, n_matching_session_tokens 0, embd_inp.size() 99, session_tokens.size() 0, embd_inp.size() 99
-[1720613391] main: interactive mode on.
-[1720613391] Reverse prompt: 'User:'
-[1720613391] sampling: 
+[1721871968] tokens: [ '<s>':1, ' Trans':4103, 'cript':924, ' of':310, ' a':263, ' dialog':7928, ',':29892, ' where':988, ' the':278, ' User':4911, ' interact':16254, 's':29879, ' with':411, ' an':385, ' Ass':4007, 'istant':22137, ' named':4257, ' Bob':7991, '.':29889, ' Bob':7991, ' is':338, ' helpful':8444, ',':29892, ' kind':2924, ',':29892, ' honest':15993, ',':29892, ' good':1781, ' at':472, ' writing':5007, ',':29892, ' and':322, ' never':2360, ' fails':8465, ' to':304, ' answer':1234, ' the':278, ' User':4911, ''':29915, 's':29879, ' requests':7274, ' immediately':7389, ' and':322, ' with':411, ' precision':16716, '.':29889, '':13, '':13, 'User':2659, ':':29901, ' Hello':15043, ',':29892, ' Bob':7991, '.':29889, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659, ':':29901, ' Please':3529, ' tell':2649, ' me':592, ' the':278, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, '.':29889, '':13, 'Bob':29362, ':':29901, ' Sure':18585, '.':29889, ' The':450, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, ' is':338, ' Moscow':25820, ',':29892, ' the':278, ' capital':7483, ' of':310, ' Russia':12710, '.':29889, '':13, 'User':2659, ':':29901 ]
+[1721871968] recalculate the cached logits (check): embd_inp.empty() false, n_matching_session_tokens 0, embd_inp.size() 99, session_tokens.size() 0, embd_inp.size() 99
+[1721871968] main: interactive mode on.
+[1721871968] Reverse prompt: 'User:'
+[1721871968] sampling: 
 	repeat_last_n = 64, repeat_penalty = 1.000, frequency_penalty = 0.000, presence_penalty = 0.000
 	top_k = 40, tfs_z = 1.000, top_p = 0.950, min_p = 0.050, typical_p = 1.000, temp = 0.800
 	mirostat = 0, mirostat_lr = 0.100, mirostat_ent = 5.000
-[1720613391] sampling order: 
+[1721871968] sampling order: 
 CFG -> Penalties -> top_k -> tfs_z -> typical_p -> top_p -> min_p -> temperature 
-[1720613391] generate: n_ctx = 4096, n_batch = 2048, n_predict = 512, n_keep = 1
-[1720613391] 
+[1721871968] generate: n_ctx = 4096, n_batch = 2048, n_predict = 512, n_keep = 1
+[1721871968] 
 
-[1720613391] == Running in interactive mode. ==
-[1720613391]  - Press Ctrl+C to interject at any time.
-[1720613391]  - Press Return to return control to the AI.
+[1721871968] == Running in interactive mode. ==
+[1721871968]  - Press Ctrl+C to interject at any time.
+[1721871968]  - Press Return to return control to the AI.
  - To return control without starting a new line, end your input with '/'.
  - If you want to submit another line, end your input with '\'.
 
-[1720613391] embd_inp.size(): 99, n_consumed: 0
-[1720613391] found antiprompt: User: Please tell me the largest city in Europe.
+[1721871968] embd_inp.size(): 99, n_consumed: 0
+[1721871968] found antiprompt: User: Please tell me the largest city in Europe.
 Bob: Sure. The largest city in Europe is Moscow, the capital of Russia.
 User:
-[1720613391] eval: [ '<s>':1, ' Trans':4103, 'cript':924, ' of':310, ' a':263, ' dialog':7928, ',':29892, ' where':988, ' the':278, ' User':4911, ' interact':16254, 's':29879, ' with':411, ' an':385, ' Ass':4007, 'istant':22137, ' named':4257, ' Bob':7991, '.':29889, ' Bob':7991, ' is':338, ' helpful':8444, ',':29892, ' kind':2924, ',':29892, ' honest':15993, ',':29892, ' good':1781, ' at':472, ' writing':5007, ',':29892, ' and':322, ' never':2360, ' fails':8465, ' to':304, ' answer':1234, ' the':278, ' User':4911, ''':29915, 's':29879, ' requests':7274, ' immediately':7389, ' and':322, ' with':411, ' precision':16716, '.':29889, '':13, '':13, 'User':2659, ':':29901, ' Hello':15043, ',':29892, ' Bob':7991, '.':29889, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659, ':':29901, ' Please':3529, ' tell':2649, ' me':592, ' the':278, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, '.':29889, '':13, 'Bob':29362, ':':29901, ' Sure':18585, '.':29889, ' The':450, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, ' is':338, ' Moscow':25820, ',':29892, ' the':278, ' capital':7483, ' of':310, ' Russia':12710, '.':29889, '':13, 'User':2659, ':':29901 ]
-[1720614884] n_past = 99
-[1720614884] embd_inp.size(): 99, n_consumed: 99
-[1720614884] found antiprompt: User: Please tell me the largest city in Europe.
+[1721871968] eval: [ '<s>':1, ' Trans':4103, 'cript':924, ' of':310, ' a':263, ' dialog':7928, ',':29892, ' where':988, ' the':278, ' User':4911, ' interact':16254, 's':29879, ' with':411, ' an':385, ' Ass':4007, 'istant':22137, ' named':4257, ' Bob':7991, '.':29889, ' Bob':7991, ' is':338, ' helpful':8444, ',':29892, ' kind':2924, ',':29892, ' honest':15993, ',':29892, ' good':1781, ' at':472, ' writing':5007, ',':29892, ' and':322, ' never':2360, ' fails':8465, ' to':304, ' answer':1234, ' the':278, ' User':4911, ''':29915, 's':29879, ' requests':7274, ' immediately':7389, ' and':322, ' with':411, ' precision':16716, '.':29889, '':13, '':13, 'User':2659, ':':29901, ' Hello':15043, ',':29892, ' Bob':7991, '.':29889, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659, ':':29901, ' Please':3529, ' tell':2649, ' me':592, ' the':278, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, '.':29889, '':13, 'Bob':29362, ':':29901, ' Sure':18585, '.':29889, ' The':450, ' largest':10150, ' city':4272, ' in':297, ' Europe':4092, ' is':338, ' Moscow':25820, ',':29892, ' the':278, ' capital':7483, ' of':310, ' Russia':12710, '.':29889, '':13, 'User':2659, ':':29901 ]
+[1721871969] n_past = 99
+[1721871969] embd_inp.size(): 99, n_consumed: 99
+[1721871969] found antiprompt: User: Please tell me the largest city in Europe.
 Bob: Sure. The largest city in Europe is Moscow, the capital of Russia.
 User:
-[1720614884] waiting for user input
-[1720615778] buffer: 'hello
+[1721871969] waiting for user input
+[1721871972] buffer: 'hello
 '
-[1720615778] input tokens: [ ' hello':22172, '':13 ]
-[1720615778] n_remain: 510
-[1720615778] embd_inp.size(): 101, n_consumed: 99
-[1720615778] eval: [ ' hello':22172, '':13 ]
-[1720615809] n_past = 101
-[1720615809] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362 ]
-[1720615809] n_remain: 509
-[1720615809] eval: [ 'Bob':29362 ]
-[1720615825] n_past = 102
-[1720615825] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901 ]
-[1720615825] n_remain: 508
-[1720615825] eval: [ ':':29901 ]
-[1720615841] n_past = 103
-[1720615841] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221 ]
-[1720615841] n_remain: 507
-[1720615841] eval: [ ' Sorry':8221 ]
-[1720615856] n_past = 104
-[1720615856] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889 ]
-[1720615856] n_remain: 506
-[1720615856] eval: [ '.':29889 ]
-[1720615872] n_past = 105
-[1720615872] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306 ]
-[1720615872] n_remain: 505
-[1720615872] eval: [ ' I':306 ]
-[1720615888] n_past = 106
-[1720615888] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282 ]
-[1720615888] n_remain: 504
-[1720615888] eval: [ ' didn':3282 ]
-[1720615903] n_past = 107
-[1720615903] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915 ]
-[1720615903] n_remain: 503
-[1720615903] eval: [ ''':29915 ]
-[1720615919] n_past = 108
-[1720615919] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873 ]
-[1720615919] n_remain: 502
-[1720615919] eval: [ 't':29873 ]
-[1720615935] n_past = 109
-[1720615935] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274 ]
-[1720615935] n_remain: 501
-[1720615935] eval: [ ' understand':2274 ]
-[1720615950] n_past = 110
-[1720615950] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274, ' that':393 ]
-[1720615950] n_remain: 500
-[1720615950] eval: [ ' that':393 ]
-[1720615966] n_past = 111
-[1720615966] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274, ' that':393, '.':29889 ]
-[1720615966] n_remain: 499
-[1720615966] eval: [ '.':29889 ]
-[1720615982] n_past = 112
-[1720615982] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274, ' that':393, '.':29889, '':13 ]
-[1720615982] n_remain: 498
-[1720615982] eval: [ '':13 ]
-[1720615998] n_past = 113
-[1720615998] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274, ' that':393, '.':29889, '':13, 'User':2659 ]
-[1720615998] n_remain: 497
-[1720615998] eval: [ 'User':2659 ]
-[1720616013] n_past = 114
-[1720616013] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Sorry':8221, '.':29889, ' I':306, ' didn':3282, ''':29915, 't':29873, ' understand':2274, ' that':393, '.':29889, '':13, 'User':2659, ':':29901 ]
-[1720616013] n_remain: 496
-[1720616013] found antiprompt: ▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅ hello
-Bob: Sorry. I didn't understand that.
+[1721871972] input tokens: [ ' hello':22172, '':13 ]
+[1721871972] n_remain: 510
+[1721871972] embd_inp.size(): 101, n_consumed: 99
+[1721871972] eval: [ ' hello':22172, '':13 ]
+[1721871972] n_past = 101
+[1721871972] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362 ]
+[1721871972] n_remain: 509
+[1721871972] eval: [ 'Bob':29362 ]
+[1721871973] n_past = 102
+[1721871973] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901 ]
+[1721871973] n_remain: 508
+[1721871973] eval: [ ':':29901 ]
+[1721871973] n_past = 103
+[1721871973] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043 ]
+[1721871973] n_remain: 507
+[1721871973] eval: [ ' Hello':15043 ]
+[1721871974] n_past = 104
+[1721871974] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889 ]
+[1721871974] n_remain: 506
+[1721871974] eval: [ '.':29889 ]
+[1721871974] n_past = 105
+[1721871974] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128 ]
+[1721871974] n_remain: 505
+[1721871974] eval: [ ' How':1128 ]
+[1721871974] n_past = 106
+[1721871974] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122 ]
+[1721871974] n_remain: 504
+[1721871974] eval: [ ' may':1122 ]
+[1721871975] n_past = 107
+[1721871975] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306 ]
+[1721871975] n_remain: 503
+[1721871975] eval: [ ' I':306 ]
+[1721871975] n_past = 108
+[1721871975] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371 ]
+[1721871975] n_remain: 502
+[1721871975] eval: [ ' help':1371 ]
+[1721871976] n_past = 109
+[1721871976] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366 ]
+[1721871976] n_remain: 501
+[1721871976] eval: [ ' you':366 ]
+[1721871976] n_past = 110
+[1721871976] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826 ]
+[1721871976] n_remain: 500
+[1721871976] eval: [ ' today':9826 ]
+[1721871977] n_past = 111
+[1721871977] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973 ]
+[1721871977] n_remain: 499
+[1721871977] eval: [ '?':29973 ]
+[1721871977] n_past = 112
+[1721871977] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13 ]
+[1721871977] n_remain: 498
+[1721871977] eval: [ '':13 ]
+[1721871978] n_past = 113
+[1721871978] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659 ]
+[1721871978] n_remain: 497
+[1721871978] eval: [ 'User':2659 ]
+[1721871978] n_past = 114
+[1721871978] last: [ '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, '':0, ' hello':22172, '':13, 'Bob':29362, ':':29901, ' Hello':15043, '.':29889, ' How':1128, ' may':1122, ' I':306, ' help':1371, ' you':366, ' today':9826, '?':29973, '':13, 'User':2659, ':':29901 ]
+[1721871978] n_remain: 496
+[1721871978] found antiprompt: ▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅▅ hello
+Bob: Hello. How may I help you today?
 User:
-[1720616013] waiting for user input
+[1721871978] waiting for user input
+[1721871980] 
+[1721871980] llama_print_timings:        load time =    2775.58 ms
+[1721871980] llama_print_timings:      sample time =       0.27 ms /    14 runs   (    0.02 ms per token, 51660.52 tokens per second)
+[1721871980] llama_print_timings: prompt eval time =    4038.12 ms /   101 tokens (   39.98 ms per token,    25.01 tokens per second)
+[1721871980] llama_print_timings:        eval time =    5814.22 ms /    13 runs   (  447.25 ms per token,     2.24 tokens per second)
+[1721871980] llama_print_timings:       total time =   12209.27 ms /   114 tokens

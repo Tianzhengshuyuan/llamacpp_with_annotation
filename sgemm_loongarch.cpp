@@ -51,6 +51,7 @@
 #include "sgemm.h"
 #include "ggml-impl.h"
 #include "ggml-quants.h"
+#include <stdio.h>
 
 #ifdef _MSC_VER
 #define NOINLINE __declspec(noinline)
@@ -272,6 +273,7 @@ static __m128 lasx_extractf128( __m256 a, int pos) {
     }
     return ret;
 }
+//8个float相加
 static inline float hsum_float_8(const __m256 x) {
     //lasx_extractf128(x, 1)取x的高128位
     //lasx_extractf128(x, 0)取x的低128位
@@ -332,7 +334,7 @@ template <> inline __m256 load(const float *p) {
 
 #if defined(__loongarch_asx)
 template <> inline __m256 load(const float *p) {
-    //从指定的内存地址加载 256 位的数据，并将其存储在一个 256 位的寄存器中
+    //从指定的内存地址加载 256(32*8) 位的数据，并将其存储在一个 256 位的寄存器中
     return (__m256)__lasx_xvld(p, 0);
 }
     // Convert two __m128i to __m256i
@@ -586,6 +588,12 @@ class tinyBLAS {
             for (int64_t l = 0; l < k; l += KN)
                 for (int64_t j = 0; j < RN; ++j)
                     for (int64_t i = 0; i < RM; ++i)
+                        //在loongarch中：load的元素为ggml_fp16_t --> vld vfcvth.s.h vfcvtl.s.h xvpermi.q xvori.b
+                        //              load的元素为flaot --> xvld
+                        //madd对应 xvfmadd.s，结果为8个32位浮点数
+                        //prompt中：gemm<5,5>中i循环j不变时，B本可以复用，但是并没有。。。decode阶段有优化
+                        //prompt中：gemm<5,5>中Cv[j][i]要先xvld然后xvst存回内存，而不是保留在寄存器里。。。decode阶段有优化
+                        //gemm<5,5>本可以展成25个计算，A也可以复用，但是只展成5了。。。
                         Cv[j][i] = madd(load<V>(A + lda * (ii + i) + l),
                                         load<V>(B + ldb * (jj + j) + l),
                                         Cv[j][i]);
@@ -786,7 +794,7 @@ class tinyBLAS_Q0_AVX {
     void mnpack(int64_t m0, int64_t m, int64_t n0, int64_t n) {
         int64_t mc, nc, mp, np;
         //最大处理4*4的块？
-        switch ((MIN(m - m0, 4) << 4) | MIN(n - n0, 4)) {
+        switch ((MIN(m - m0, 4) << 4) | MIN(n - n0, 1)) {
 #if VECTOR_REGISTERS == 32
         case 0x44:
             mc = 4;
@@ -1113,23 +1121,26 @@ class tinyBLAS_Q0_LOONGARCH {
     }
 
     static __m256i lasx_insertf128( __m128i x, __m128i y) {
+        //xvpermi.q 
+        //xvori.b
         return lasx_set_q(x, y);
     }
 
     // Unpack 32 4-bit fields into 32 bytes
     // The output vector contains 32 bytes, each one in [ 0 .. 15 ] interval
     static inline __m256i bytes_from_nibbles_32(const uint8_t * rsi) {
-        //从内存地址(rsi+0) load一个128位的向量，128=32 * 4
+        //从内存地址(rsi+0) load一个128位的向量，128=32 * 4 //vld
         const __m128i lo = __lsx_vld((const __m128i *)rsi, 0);
-        //128位向量中每16位向量右移4位后得到hi
+        //128位向量中每16位向量右移4位后得到hi //vsrli
         __m128i hi = __lsx_vsrli_h(lo, 4);
         //hi和lo拼成256位，得到的数的32个字节均与0xf按位与
         //最后128位向量中每个4位元素扩展为8位[0,1,2...31] -> [0,2,...30,1,3,...31]
+        //xvpermi.q  xvori.b  xvandi.b
         return __lasx_xvandi_b(lasx_insertf128(hi, lo), 0xf);
     }
 
     inline __m256i load(const block_q4_0 *b) {
-        // __lasx_xvreplgr2vr_b(8)创建包含32个8位整数8的向量
+        // __lasx_xvreplgr2vr_b(8)创建包含32个8位整数8的向量 //xvreplgr2vr.b
         //bytes_from_nibbles_32把128位数据放到256位向量里：[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]
         //__lasx_xvsub_b给每个8位整数减8
         return __lasx_xvsub_b(bytes_from_nibbles_32(b->qs), __lasx_xvreplgr2vr_b(8));
@@ -1160,8 +1171,10 @@ class tinyBLAS_Q0_LOONGARCH {
         // Perform multiplication and create 16-bit values
         // lasx中没有指令能够直接实现和avx中_mm256_maddubs_epi16相同的功能，所以写函数lasx_maddubs_h模拟
         // ax[0]*sy[0]+ax[1]*sy[1]=dot[0];dot中有16个16位结果
+        // xvmulwev.h.b  xvmulwod.h.b  xvsadd.h
         const __m256i dot = lasx_maddubs_h(ax, sy);
-        //相邻两数相加，得到8个32位结果
+        // 相邻两数相加，得到8个32位结果
+        // xvpackod.h  xvaddwev.w.h  xvffint.s.w
         return sum_i16_pairs_float(dot);
     }
 
@@ -1209,16 +1222,17 @@ class tinyBLAS_Q0_LOONGARCH {
                     //如果是block_q4_0，则将128位量化后数据放到256位向量中，且按照[0,1,2......31] -> [0,2,4,...30,1,3,5,...31]调整顺序
                     //mul_sum_i8_pairs_float将两个输入的对应位相乘，相邻4个相加，得到8个32位数
 
-                    //B中是q8_0,A是q4_0
+                    //B中是q8_0,使用vld从内存加载；A是q4_0，使用xvld从内存加载
                     //对于gemm<4,1>(即decode阶段），B中load的数据可以在和A的其他列相乘时重复利用
                     //此外，mul_sum_i8_pairs_float中的signcov(B,B)，也可以在i循环时，重复利用计算好的结果
-                    //但是gemm<4,4>，gemm<4,2>，gemm<4,3>就没这个两优化
+                    //但是gemm<4,4>，gemm<4,2>，gemm<4,3>就没这两个优化
                         __m256 udTmp = mul_sum_i8_pairs_float(load(B + ldb * (jj + j) + l),
                                                               load(A + lda * (ii + i) + l));
 
                         //unhalf调用GGML_FP16_TO_FP32，把A和B的scale转为32位
-                        //__lasx_xvreplfr2vr_s将指定的单精度浮点数广播到256位向量寄存器的每个32位浮点数
-                        //__lasx_xvfmadd_s实现a[i]*b[i]+c[i]
+                        //unhalf(A)*unhalf(B)对应fld.s fld.s fmul.s，在j不变i循环时，可以节省一次fld.s的操作
+                        //__lasx_xvreplfr2vr_s将指定的单精度浮点数广播到256位向量寄存器的每个32位浮点数 // movfr2gr.s  xvreplgr2vr.w
+                        //__lasx_xvfmadd_s实现a[i]*b[i]+c[i]  // xvfmadd.s
                         Cv[j][i] = __lasx_xvfmadd_s(__lasx_xvreplfr2vr_s(unhalf(A[lda * (ii + i) + l].d) *
                                                        unhalf(B[ldb * (jj + j) + l].d)),
                                                        udTmp,

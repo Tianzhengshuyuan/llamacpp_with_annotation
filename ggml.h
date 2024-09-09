@@ -568,10 +568,12 @@ extern "C" {
         GGML_DEPRECATED(enum ggml_backend_type backend, "use the buffer type to find the storage location of the tensor");
 
         struct ggml_backend_buffer * buffer;
-        //ne表示每个维度中的元素数量
-        int64_t ne[GGML_MAX_DIMS]; // number of elements
+
+        //ggml_type_size: fp32->4  fp16->2  q8_0->34  q4_0->18
+        //ggml_blck_size: fp32->1  fp16->1  q8_0->32  q4_0->32
+        int64_t ne[GGML_MAX_DIMS]; // number of elements         //ne表示每个维度中的元素数量
         size_t  nb[GGML_MAX_DIMS]; // stride in bytes:
-                                   // nb[0] = ggml_type_size(type) 量化后type的size会变小，比如q4_0的大小为18
+                                   // nb[0] = ggml_type_size(type) 量化后type的size会变小，比如q4_0的大小为18。fp32的大小为4
                                    // nb[1] = nb[0]   * (ne[0] / ggml_blck_size(type)) + padding 因为是block_size大小的东西被压缩成了type_size大小
                                    // nb[i] = nb[i-1] * ne[i-1]
 

@@ -195,6 +195,7 @@ int main(int argc, char ** argv) {
 
     // load the model and apply lora adapter, if any
     LOG("%s: load the model and apply lora adapter, if any\n", __func__);
+    //加载得到 model 和 context
     std::tie(model, ctx) = llama_init_from_gpt_params(params);
     if (sparams.cfg_scale > 1.f) {
         struct llama_context_params lparams = llama_context_params_from_gpt_params(params);
@@ -328,6 +329,7 @@ int main(int argc, char ** argv) {
     }
 
     // number of tokens to keep when resetting context
+    // n_keep is // number of tokens to keep from initial prompt
     if (params.n_keep < 0 || params.n_keep > (int) embd_inp.size()) {
         params.n_keep = (int)embd_inp.size();
     } else {
@@ -499,9 +501,13 @@ int main(int argc, char ** argv) {
         fprintf(stderr, "%s: failed to initialize sampling subsystem\n", __func__);
         exit(1);
     }
-
     //开始交互，每次生成一个token
     //n_remain最开始=n_predict,n_predict由命令行中“-n”决定，循环一次少一个
+    //第一次prompt的token版本在emdb_inp里，放到embd里，打印prompt，查看prompt的结尾是不是antiprompt
+    //第二次对prompt进行decode，清空embd，等待用户输入，tokenize用户输入，然后拼接到embd_inpt后面
+    //第三次把用户输入（例如hello）放到embd里
+    //第四次把embd里放的用户输入送到llama_decode里解码，清空embd，解码得到的token放入embd，把embd里的token转为str，即Bob
+    //第五次把embd里的Bob放到llama_decode里解码，清空embd，解码得到的token放入embd，把embd里的token转为str，即：
     //while循环一次是接受用户输入，一次放入embd，一次decode并且预测下一个，然后很多次循环都是decode并预测下一个，直到出现antiprompt
     while ((n_remain != 0 && !is_antiprompt) || params.interactive) {
         // predict
@@ -668,10 +674,8 @@ int main(int argc, char ** argv) {
                 n_session_consumed = session_tokens.size();
             }
         }
-
         embd.clear();
         embd_guidance.clear();
-
         if ((int) embd_inp.size() <= n_consumed && !is_interacting) {
             // optionally save the session on first sample (for faster prompt loading next time)
             if (!path_session.empty() && need_to_save_session && !params.prompt_cache_ro) {
@@ -699,7 +703,7 @@ int main(int argc, char ** argv) {
         } else {
             // some user input remains from prompt or interaction, forward it to processing
             LOG("embd_inp.size(): %d, n_consumed: %d\n", (int) embd_inp.size(), n_consumed);
-            //embd_inp里还有没consume的东西
+            //embd_inp里还有没consume的东西，例如第一次进入的时候的prompt，第三次进入时的hello
             while ((int) embd_inp.size() > n_consumed) {
                 //把embd_inp里没consume的东西放到embd里
                 embd.push_back(embd_inp[n_consumed]);
@@ -751,8 +755,9 @@ int main(int argc, char ** argv) {
             if (!params.antiprompt.empty()) {
                 const int n_prev = 32;
                 //第一次进入时last_output的值为“User:Please tell me ....the capital of Russia. User:”
-                //" hello\nBob: Hello. How may I help you today?\nUser:"
-                //第二次是“hello"
+                //" hello\nBob: Hello. How may I help you today?\nUser:"，这是根据n_prev=32决定的长度
+                //第三次是“hello"
+                //第四次时“hello\nBob"
                 const std::string last_output = llama_sampling_prev_str(ctx_sampling, ctx, n_prev);
 
                 is_antiprompt = false;

@@ -1534,12 +1534,8 @@ static inline void __sse_f16x4_store(ggml_fp16_t *x, __m128 y) {
 #define GGML_F32x8_FMA(a, b, c) __lasx_xvfmadd_s(b, c, a)
 #define GGML_F32x8_ADD     __lasx_xvfadd_s
 #define GGML_F32x8_MUL     __lasx_xvfmul_s
-// GGML_F32x8_REDUCE 是一个宏定义，用于实现向量的归约(reduction)操作。
-//在计算机科学中，归约是一种将数组或向量中的所有元素通过某种运算（如加法、乘法）合并成一个单一结果值的过程。
-//在__loongarch_lasx中，它用于将4个包含8个单精度浮点数的向量相加，然后把得到的256位向量中的所有元素相加，得到一个标量浮点数结果。
 #define GGML_F32x8_REDUCE(res, x)                                 \
 do {                                                              \
-//GGML_F32_ARR=32/8=4
     int offset = GGML_F32_ARR >> 1;                               \
     for (int i = 0; i < offset; ++i) {                            \
         x[i] = __lasx_xvfadd_s(x[i], x[offset+i]);                  \
@@ -1564,8 +1560,6 @@ do {                                                              \
 #define GGML_F32_VEC_STORE  GGML_F32x8_STORE
 #define GGML_F32_VEC_FMA    GGML_F32x8_FMA
 #define GGML_F32_VEC_ADD    GGML_F32x8_ADD
-#define GGML_F32_VEC_MUL    GGML_F32x8_MUL
-#define GGML_F32_VEC_REDUCE GGML_F32x8_REDUCE
 
 // F16 LASX
 
@@ -1800,6 +1794,8 @@ inline static void ggml_vec_neg_f32 (const int n, float * y, const float * x)   
 inline static void ggml_vec_mul_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i]*y[i];   }
 inline static void ggml_vec_div_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i]/y[i];   }
 
+
+
 static void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float * restrict x, size_t bx, const float * restrict y, size_t by, int nrc) {
    assert(nrc == 1);
    UNUSED(nrc);
@@ -1816,20 +1812,19 @@ static void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float *
     GGML_F32_VEC ax[GGML_F32_ARR];
     GGML_F32_VEC ay[GGML_F32_ARR];
     //GGML_F32_STEP=32, GGML_F32_EPR=8, GGML_F32_ARR=32/8=4
+
     for (int i = 0; i < np; i += GGML_F32_STEP) {
         for (int j = 0; j < GGML_F32_ARR; j++) {
             //GGML_F32_VEC_LOAD在lasx里是__lasx_xvld
             ax[j] = GGML_F32_VEC_LOAD(x + i + j*GGML_F32_EPR);
             ay[j] = GGML_F32_VEC_LOAD(y + i + j*GGML_F32_EPR);
-
             //GGML_F32_VEC_FMA在lasx里是
             //对256位向量中的32位浮点，a[i]*b[i]+c[i], 0<=i<8
             sum[j] = GGML_F32_VEC_FMA(sum[j], ax[j], ay[j]);
         }
     }
-
-    // reduce sum0..sum3 to sum0
     //loongarch_lasx将4个包含8个单精度浮点数的向量相加，然后把得到的256位向量中的所有元素相加，得到一个标量浮点数结果。
+    // reduce sum0..sum3 to sum0
     GGML_F32_VEC_REDUCE(sumf, sum);
 
     // leftovers
@@ -12312,7 +12307,7 @@ static void ggml_compute_forward_mul_mat(
     int64_t t0 = ggml_perf_time_us();
     UNUSED(t0);
     //这个宏定义了src0、src1、dst各个维度的命名方式
-    //ne01、ne02、ne03是src0的4维
+    //ne00、ne01、ne02、ne03是src0的4维
     //ne10、ne11、ne12、ne13是src1的4维
     //ne0、ne1、ne2、ne3是dst的4维
     GGML_TENSOR_BINARY_OP_LOCALS
@@ -12358,7 +12353,7 @@ static void ggml_compute_forward_mul_mat(
             for (int64_t i12 = 0; i12 < ne12; i12++)
                 if (!llamafile_sgemm(ne01, ne11, ne00/ggml_blck_size(src0->type),
                                      (const char *)src0->data + i12/r2*nb02 + i13/r3*nb03,
-                                     nb01/ggml_type_size(src0->type),
+                                     nb01/ggml_type_size(src0->type), // ((type_size * 第0维维度) / block_size)/type_size
                                      (const char *)src1->data + i12*nb12 + i13*nb13,
                                      nb11/ggml_type_size(src1->type),
                                      (char *)dst->data + i12*nb2 + i13*nb3,

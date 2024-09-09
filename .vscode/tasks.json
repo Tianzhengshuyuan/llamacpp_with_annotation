@@ -3,7 +3,7 @@
         {
             "label": "build_debug", // 任务名称，调试时可以指定不用任务进行处理 
             "type": "shell", // [shell, process], 定义任务作为作为进程运行还是在shell中作为命令运行; (测试没看出啥区别...)
-            "command": "make", // 要执行的命令，可以是外部程序或者是shell命令。这里使用make编译命令
+            "command": "make LLAMA_DEBUG=1 -j", // 要执行的命令，可以是外部程序或者是shell命令。这里使用make编译命令
             "problemMatcher": [ // 要使用的问题匹配程序。可以是一个字符串或一个问题匹配程序定义，也可以是一个字符串数组和多个问题匹配程序。
                 "$gcc"
             ],

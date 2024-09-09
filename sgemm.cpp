@@ -726,6 +726,7 @@ class tinyBLAS_Q0_AVX {
         default:
             return;
         }
+
         mp = m0 + (m - m0) / mc * mc;
         np = n0 + (n - n0) / nc * nc;
         mnpack(mp, m, n0, np);

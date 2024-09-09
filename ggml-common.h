@@ -137,6 +137,7 @@ typedef sycl::half2 ggml_half2;
 
 #endif // GGML_COMMON_DECL_CUDA || GGML_COMMON_DECL_HIP
 
+//((8*16)+16)/8=18，即block_q4_0占18个字节
 #define QK4_0 32
 typedef struct {
     ggml_half d;           // delta代表scale，ggml_half是uint16_t
@@ -179,6 +180,7 @@ typedef struct {
 } block_q5_1;
 static_assert(sizeof(block_q5_1) == 2 * sizeof(ggml_half) + sizeof(uint32_t) + QK5_1 / 2, "wrong q5_1 block size/padding");
 
+//((8*32)+16)/8=34，即block_q8_0占34个字节
 #define QK8_0 32
 typedef struct {
     ggml_half d;       // delta

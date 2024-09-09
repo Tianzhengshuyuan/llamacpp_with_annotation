@@ -2636,8 +2636,8 @@ void quantize_row_q4_K_reference(const float * restrict x, block_q4_K * restrict
     uint8_t L[QK_K];
     uint8_t Laux[32];
     float   weights[32]; // 在每个block里被重复利用
-    float mins[QK_K/32]; // 用来存每个block的最小值？
-    float scales[QK_K/32]; // 用来存每个block的scale？
+    float mins[QK_K/32]; // 用来存每个block的最小值
+    float scales[QK_K/32]; // 用来存每个block的scale
 
     // nb是superblock的数量
     for (int i = 0; i < nb; i++) {

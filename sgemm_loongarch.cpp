@@ -1050,7 +1050,7 @@ class tinyBLAS_Q0_LOONGARCH {
                     const TB *B, int64_t ldb,
                     TC *C, int64_t ldc,
                     int ith, int nth)
-        : A(A), B(B), C(C), k(k), lda(lda), ldb(ldb), ldc(ldc), ith(ith), nth(nth) {
+        : A(A), B(B), C(C), k(k), lda(lda), ldb(ldb), ldc(ldc), ith(ith), nth(nth){
     }
 
     void matmul(int64_t m, int64_t n, int task) {
@@ -1062,49 +1062,571 @@ class tinyBLAS_Q0_LOONGARCH {
     //m0=0,n0=0,m和n分别是两个矩阵没有重合的维度
     void mnpack(int64_t m0, int64_t m, int64_t n0, int64_t n) {
         int64_t mc, nc, mp, np;
-        switch ((MIN(m - m0, 4) << 4) | MIN(n - n0, 4)) {
-        case 0x44:
-        case 0x43:
-        case 0x42:
-        case 0x41:
+        switch ((MIN(m - m0, 4) << 8) | MIN(n - n0, 4)) {
+        case 0x1f01:
+            mc = 31;
+            nc = 1;
+            gemm<31,1>(m0, m, n0, n);
+            break;
+        case 0x1e01:
+            mc = 30;
+            nc = 1;
+            gemm<30,1>(m0, m, n0, n);
+            break;        
+        case 0x1d01:
+            mc = 29;
+            nc = 1;
+            gemm<29,1>(m0, m, n0, n);
+            break;        
+        case 0x1c01:
+            mc = 28;
+            nc = 1;
+            gemm<28,1>(m0, m, n0, n);
+            break;
+        case 0x1b01:
+            mc = 27;
+            nc = 1;
+            gemm<27,1>(m0, m, n0, n);
+            break;        
+        case 0x1a01:
+            mc = 26;
+            nc = 1;
+            gemm<26,1>(m0, m, n0, n);
+            break;        
+        case 0x1901:
+            mc = 25;
+            nc = 1;
+            gemm<25,1>(m0, m, n0, n);
+            break;        
+        case 0x1801:
+            mc = 24;
+            nc = 1;
+            gemm<24,1>(m0, m, n0, n);
+            break;        
+        case 0x1701:
+            mc = 23;
+            nc = 1;
+            gemm<23,1>(m0, m, n0, n);
+            break;        
+        case 0x1601:
+            mc = 22;
+            nc = 1;
+            gemm<22,1>(m0, m, n0, n);
+            break;        
+        case 0x1501:
+            mc = 21;
+            nc = 1;
+            gemm<21,1>(m0, m, n0, n);
+            break;        
+        case 0x1401:
+            mc = 20;
+            nc = 1;
+            gemm<20,1>(m0, m, n0, n);
+            break;        
+        case 0x1301:
+            mc = 19;
+            nc = 1;
+            gemm<19,1>(m0, m, n0, n);
+            break;        
+        case 0x1201:
+            mc = 18;
+            nc = 1;
+            gemm<18,1>(m0, m, n0, n);
+            break;        
+        case 0x1101:
+            mc = 17;
+            nc = 1;
+            gemm<17,1>(m0, m, n0, n);
+            break;
+        case 0x1001:
+            mc = 16;
+            nc = 1;
+            gemm<16,1>(m0, m, n0, n);
+            break;
+        case 0x0f01:
+            mc = 15;
+            nc = 1;
+            gemm<15,1>(m0, m, n0, n);
+            break;               
+        case 0x0f02:
+            mc = 15;
+            nc = 2;
+            gemm<15,2>(m0, m, n0, n);
+            break;  
+        case 0x0e01:
+            mc = 14;
+            nc = 1;
+            gemm<14,1>(m0, m, n0, n);
+            break; 
+        case 0x0e02:
+            mc = 14;
+            nc = 2;
+            gemm<14,2>(m0, m, n0, n);
+            break; 
+        case 0x0d01:
+            mc = 13;
+            nc = 1;
+            gemm<13,1>(m0, m, n0, n);
+            break; 
+        case 0x0d02:
+            mc = 13;
+            nc = 2;
+            gemm<13,2>(m0, m, n0, n);
+            break; 
+        case 0x0c01:
+            mc = 12;
+            nc = 1;
+            gemm<12,1>(m0, m, n0, n);
+            break;  
+        case 0x0c02:
+            mc = 12;
+            nc = 2;
+            gemm<12,2>(m0, m, n0, n);
+            break;  
+        case 0x0b01:
+            mc = 11;
+            nc = 1;
+            gemm<11,1>(m0, m, n0, n);
+            break;  
+        case 0x0b02:
+            mc = 11;
+            nc = 2;
+            gemm<11,2>(m0, m, n0, n);
+            break; 
+        case 0x0a01:
+            mc = 10;
+            nc = 1;
+            gemm<10,1>(m0, m, n0, n);
+            break;  
+        case 0x0a02:
+            mc = 10;
+            nc = 2;
+            gemm<10,2>(m0, m, n0, n);
+            break;  
+        case 0x0a03:
+            mc = 10;
+            nc = 3;
+            gemm<10,3>(m0, m, n0, n);
+            break;
+        case 0x0901:
+            mc = 9;
+            nc = 1;
+            gemm<9, 1>(m0, m, n0, n);
+            break;        
+        case 0x0902:
+            mc = 9;
+            nc = 2;
+            gemm<9, 2>(m0, m, n0, n);
+            break;
+        case 0x0903:
+            mc = 9;
+            nc = 3;
+            gemm<9, 3>(m0, m, n0, n);
+            break;  
+        case 0x0801:
+            mc = 8;
+            nc = 1;
+            gemm<8, 1>(m0, m, n0, n);
+            break;        
+        case 0x0802:
+            mc = 8;
+            nc = 2;
+            gemm<8, 2>(m0, m, n0, n);
+            break;
+        case 0x0803:
+            mc = 8;
+            nc = 3;
+            gemm<8, 3>(m0, m, n0, n);
+            break;
+        case 0x0701:
+            mc = 7;
+            nc = 1;
+            gemm<7, 1>(m0, m, n0, n);
+            break;        
+        case 0x0702:
+            mc = 7;
+            nc = 2;
+            gemm<7, 2>(m0, m, n0, n);
+            break;
+        case 0x0703:
+            mc = 7;
+            nc = 3;
+            gemm<7, 3>(m0, m, n0, n);
+            break;  
+        case 0x0704:
+            mc = 7;
+            nc = 4;
+            gemm<7, 4>(m0, m, n0, n);
+            break; 
+        case 0x0601:
+            mc = 6;
+            nc = 1;
+            gemm<6, 1>(m0, m, n0, n);
+            break;        
+        case 0x0602:
+            mc = 6;
+            nc = 2;
+            gemm<6, 2>(m0, m, n0, n);
+            break;
+        case 0x0603:
+            mc = 6;
+            nc = 3;
+            gemm<6, 3>(m0, m, n0, n);
+            break;  
+        case 0x0604:
+            mc = 6;
+            nc = 4;
+            gemm<6, 4>(m0, m, n0, n);
+            break; 
+        case 0x0605:
+            mc = 6;
+            nc = 5;
+            gemm<6, 5>(m0, m, n0, n);
+            break; 
+        case 0x0501:
+            mc = 5;
+            nc = 1;
+            gemm<5, 1>(m0, m, n0, n);
+            break;        
+        case 0x0502:
+            mc = 5;
+            nc = 2;
+            gemm<5, 2>(m0, m, n0, n);
+            break;
+        case 0x0503:
+            mc = 5;
+            nc = 3;
+            gemm<5, 3>(m0, m, n0, n);
+            break;  
+        case 0x0504:
+            mc = 5;
+            nc = 4;
+            gemm<5, 4>(m0, m, n0, n);
+            break; 
+        case 0x0505:
+            mc = 5;
+            nc = 5;
+            gemm<5, 5>(m0, m, n0, n);
+            break;
+        case 0x0506:
+            mc = 5;
+            nc = 6;
+            gemm<5, 6>(m0, m, n0, n);
+            break;
+        case 0x0401:
             mc = 4;
             nc = 1;
             gemm<4, 1>(m0, m, n0, n);
+            break;        
+        case 0x0402:
+            mc = 4;
+            nc = 2;
+            gemm<4, 2>(m0, m, n0, n);
             break;
-        case 0x22:
+        case 0x0403:
+            mc = 4;
+            nc = 3;
+            gemm<4, 3>(m0, m, n0, n);
+            break;  
+        case 0x0404:
+            mc = 4;
+            nc = 4;
+            gemm<4, 4>(m0, m, n0, n);
+            break; 
+        case 0x0405:
+            mc = 4;
+            nc = 5;
+            gemm<4, 5>(m0, m, n0, n);
+            break;
+        case 0x0406:
+            mc = 4;
+            nc = 6;
+            gemm<4, 6>(m0, m, n0, n);
+            break;
+        case 0x0407:
+            mc = 4;
+            nc = 7;
+            gemm<4, 7>(m0, m, n0, n);
+            break;
+        case 0x0301:
+            mc = 3;
+            nc = 1;
+            gemm<3, 1>(m0, m, n0, n);
+            break;        
+        case 0x0302:
+            mc = 3;
+            nc = 2;
+            gemm<3, 2>(m0, m, n0, n);
+            break;
+        case 0x0303:
+            mc = 3;
+            nc = 3;
+            gemm<3, 3>(m0, m, n0, n);
+            break;  
+        case 0x0304:
+            mc = 3;
+            nc = 4;
+            gemm<3, 4>(m0, m, n0, n);
+            break; 
+        case 0x0305:
+            mc = 3;
+            nc = 5;
+            gemm<3, 5>(m0, m, n0, n);
+            break;
+        case 0x0306:
+            mc = 3;
+            nc = 6;
+            gemm<3, 6>(m0, m, n0, n);
+            break;
+        case 0x0307:
+            mc = 3;
+            nc = 7;
+            gemm<3, 7>(m0, m, n0, n);
+            break;
+        case 0x0308:
+            mc = 3;
+            nc = 8;
+            gemm<3, 8>(m0, m, n0, n);
+            break;
+        case 0x0309:
+            mc = 3;
+            nc = 9;
+            gemm<3, 9>(m0, m, n0, n);
+            break;
+        case 0x030a:
+            mc = 3;
+            nc = 10;
+            gemm<3,10>(m0, m, n0, n);
+            break;
+        case 0x0201:
+            mc = 2;
+            nc = 1;
+            gemm<2, 1>(m0, m, n0, n);
+            break;        
+        case 0x0202:
             mc = 2;
             nc = 2;
             gemm<2, 2>(m0, m, n0, n);
             break;
-        case 0x14:
-            mc = 1;
-            nc = 4;
-            gemm<1, 4>(m0, m, n0, n);
-            break;
-        case 0x31:
-            mc = 3;
-            nc = 1;
-            gemm<3, 1>(m0, m, n0, n);
-            break;
-        case 0x13:
-            mc = 1;
-            nc = 3;
-            gemm<1, 3>(m0, m, n0, n);
-            break;
-        case 0x21:
+        case 0x0203:
             mc = 2;
-            nc = 1;
-            gemm<2, 1>(m0, m, n0, n);
+            nc = 3;
+            gemm<2, 3>(m0, m, n0, n);
+            break;  
+        case 0x0204:
+            mc = 2;
+            nc = 4;
+            gemm<2, 4>(m0, m, n0, n);
+            break; 
+        case 0x0205:
+            mc = 2;
+            nc = 5;
+            gemm<2, 5>(m0, m, n0, n);
             break;
-        case 0x12:
+        case 0x0206:
+            mc = 2;
+            nc = 6;
+            gemm<2, 6>(m0, m, n0, n);
+            break;
+        case 0x0207:
+            mc = 2;
+            nc = 7;
+            gemm<2, 7>(m0, m, n0, n);
+            break;
+        case 0x0208:
+            mc = 2;
+            nc = 8;
+            gemm<2, 8>(m0, m, n0, n);
+            break;
+        case 0x0209:
+            mc = 2;
+            nc = 9;
+            gemm<2, 9>(m0, m, n0, n);
+            break;
+        case 0x020a:
+            mc = 2;
+            nc = 10;
+            gemm<2,10>(m0, m, n0, n);
+            break;
+        case 0x020b:
+            mc = 2;
+            nc = 11;
+            gemm<2,11>(m0, m, n0, n);
+            break;
+        case 0x020c:
+            mc = 2;
+            nc = 12;
+            gemm<2,12>(m0, m, n0, n);
+            break;
+        case 0x020d:
+            mc = 2;
+            nc = 13;
+            gemm<2,13>(m0, m, n0, n);
+            break;
+        case 0x020e:
+            mc = 2;
+            nc = 14;
+            gemm<2,14>(m0, m, n0, n);
+            break;
+        case 0x020f:
+            mc = 2;
+            nc = 15;
+            gemm<2,15>(m0, m, n0, n);
+            break;
+        case 0x0101:
+            mc = 1;
+            nc = 1;
+            gemm<1, 1>(m0, m, n0, n);
+            break;        
+        case 0x0102:
             mc = 1;
             nc = 2;
             gemm<1, 2>(m0, m, n0, n);
             break;
-        case 0x11:
+        case 0x0103:
             mc = 1;
-            nc = 1;
-            gemm<1, 1>(m0, m, n0, n);
+            nc = 3;
+            gemm<1, 3>(m0, m, n0, n);
+            break;  
+        case 0x0104:
+            mc = 1;
+            nc = 4;
+            gemm<1, 4>(m0, m, n0, n);
+            break; 
+        case 0x0105:
+            mc = 1;
+            nc = 5;
+            gemm<1, 5>(m0, m, n0, n);
+            break;
+        case 0x0106:
+            mc = 1;
+            nc = 6;
+            gemm<1, 6>(m0, m, n0, n);
+            break;
+        case 0x0107:
+            mc = 1;
+            nc = 7;
+            gemm<1, 7>(m0, m, n0, n);
+            break;
+        case 0x0108:
+            mc = 1;
+            nc = 8;
+            gemm<1, 8>(m0, m, n0, n);
+            break;
+        case 0x0109:
+            mc = 1;
+            nc = 9;
+            gemm<1, 9>(m0, m, n0, n);
+            break;
+        case 0x010a:
+            mc = 1;
+            nc = 10;
+            gemm<1,10>(m0, m, n0, n);
+            break;
+        case 0x010b:
+            mc = 1;
+            nc = 11;
+            gemm<1,11>(m0, m, n0, n);
+            break;
+        case 0x010c:
+            mc = 1;
+            nc = 12;
+            gemm<1,12>(m0, m, n0, n);
+            break;
+        case 0x010d:
+            mc = 1;
+            nc = 13;
+            gemm<1,13>(m0, m, n0, n);
+            break;
+        case 0x010e:
+            mc = 1;
+            nc = 14;
+            gemm<1,14>(m0, m, n0, n);
+            break;
+        case 0x010f:
+            mc = 1;
+            nc = 15;
+            gemm<1,15>(m0, m, n0, n);
+            break;
+        case 0x0110:
+            mc = 1;
+            nc = 16;
+            gemm<1,16>(m0, m, n0, n);
+            break;
+        case 0x0111:
+            mc = 1;
+            nc = 17;
+            gemm<1,17>(m0, m, n0, n);
+            break;
+        case 0x0112:
+            mc = 1;
+            nc = 18;
+            gemm<1,18>(m0, m, n0, n);
+            break;
+        case 0x0113:
+            mc = 1;
+            nc = 19;
+            gemm<1,19>(m0, m, n0, n);
+            break;
+        case 0x0114:
+            mc = 1;
+            nc = 20;
+            gemm<1,20>(m0, m, n0, n);
+            break;
+        case 0x0115:
+            mc = 1;
+            nc = 21;
+            gemm<1,21>(m0, m, n0, n);
+            break;
+        case 0x0116:
+            mc = 1;
+            nc = 22;
+            gemm<1,22>(m0, m, n0, n);
+            break;
+        case 0x0117:
+            mc = 1;
+            nc = 23;
+            gemm<1,23>(m0, m, n0, n);
+            break;
+        case 0x0118:
+            mc = 1;
+            nc = 24;
+            gemm<1,24>(m0, m, n0, n);
+            break;
+        case 0x0119:
+            mc = 1;
+            nc = 25;
+            gemm<1,25>(m0, m, n0, n);
+            break;
+        case 0x011a:
+            mc = 1;
+            nc = 26;
+            gemm<1,26>(m0, m, n0, n);
+            break;
+        case 0x011b:
+            mc = 1;
+            nc = 27;
+            gemm<1,27>(m0, m, n0, n);
+            break;
+        case 0x011c:
+            mc = 1;
+            nc = 28;
+            gemm<1,28>(m0, m, n0, n);
+            break;
+        case 0x011d:
+            mc = 1;
+            nc = 29;
+            gemm<1,29>(m0, m, n0, n);
+            break;
+        case 0x011e:
+            mc = 1;
+            nc = 30;
+            gemm<1,30>(m0, m, n0, n);
+            break;
+        case 0x011f:
+            mc = 1;
+            nc = 31;
+            gemm<1,31>(m0, m, n0, n);
             break;
         default:
             return;
